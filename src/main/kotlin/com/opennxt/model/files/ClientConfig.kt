@@ -17,7 +17,7 @@ data class ClientConfig(private val entries: MutableMap<String, String> = Object
             var key = bits[0]
             var value = bits[1]
 
-            if (bits[0] == "msg" || bits[1] == "param") {
+            if (bits[0] == "msg" || bits[0] == "param") {
                 bits = line.split("=", limit = 3)
 
                 key = "${bits[0]}=${bits[1]}"

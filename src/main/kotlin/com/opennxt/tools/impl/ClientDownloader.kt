@@ -38,6 +38,8 @@ class ClientDownloader : Tool("client-downloader", "Downloads clients from RS3")
             val typePath = path.resolve(type.name.toLowerCase()).resolve("original")
             if (!Files.exists(typePath)) Files.createDirectories(typePath)
 
+            ClientConfig.save(config, typePath.resolve("jav_config.ws"))
+
             val codebase = config.getValue("codebase")
             config.getFiles().forEach { file ->
                 val url = URL("${codebase}client?binaryType=${type.id}&fileName=${file.name}&crc=${file.crc}")
