@@ -8,6 +8,8 @@ abstract class Tool(name: String, help: String) : CliktCommand(name = name, help
 
     override fun run() {
         logger.info { "Executing tool ${this::class.simpleName}" }
+
+        runTool()
     }
 
     abstract fun runTool()
