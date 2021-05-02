@@ -93,4 +93,10 @@ data class ClientConfig(private val entries: MutableMap<String, String> = Object
 
         return set
     }
+
+    operator fun set(key: String, value: String) {
+        entries[key] = value
+    }
+
+    operator fun get(key: String): String? = entries[key]
 }
