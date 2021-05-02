@@ -4,6 +4,7 @@ import com.opennxt.ext.getCrc32
 import com.opennxt.ext.getWhirlpool
 import com.opennxt.ext.rsaEncrypt
 import com.opennxt.util.Whirlpool
+import io.netty.buffer.ByteBuf
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.math.BigInteger
@@ -17,6 +18,19 @@ class ChecksumTable(val entries: Array<TableEntry>) {
     }
 
     companion object {
+        fun decode(buffer: ByteBuf): ChecksumTable {
+            return ChecksumTable(Array(buffer.readUnsignedByte().toInt()) { id ->
+                val crc = buffer.readInt()
+                val version = buffer.readInt()
+                val files = buffer.readInt()
+                val size = buffer.readInt()
+                val whirlpool = ByteArray(64)
+                buffer.readBytes(whirlpool)
+
+                TableEntry(crc, version, files, size, whirlpool)
+            })
+        }
+
         fun decode(buffer: ByteBuffer): ChecksumTable {
             return ChecksumTable(Array(buffer.get().toInt()) { id ->
                 val crc = buffer.int

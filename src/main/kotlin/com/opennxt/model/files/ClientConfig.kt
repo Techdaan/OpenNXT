@@ -94,6 +94,14 @@ data class ClientConfig(private val entries: MutableMap<String, String> = Object
         return set
     }
 
+    fun getJs5Token(): String {
+        for (i in 0 until highestParam) {
+            val test = entries["param=$i"] ?: continue
+            if (test.length == 32) return test
+        }
+        throw NullPointerException("no js5 token found")
+    }
+
     operator fun set(key: String, value: String) {
         entries[key] = value
     }
