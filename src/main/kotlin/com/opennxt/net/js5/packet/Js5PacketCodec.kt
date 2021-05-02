@@ -7,8 +7,8 @@ object Js5PacketCodec {
     object Magic : PacketCodec<Js5Packet.Magic> {
         override fun encode(packet: Js5Packet.Magic, buf: BitBuf) {
             buf.buffer.writeMedium(packet.value)
-            buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
+            buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
@@ -22,8 +22,8 @@ object Js5PacketCodec {
 
     object LoggedIn : PacketCodec<Js5Packet.LoggedIn> {
         override fun encode(packet: Js5Packet.LoggedIn, buf: BitBuf) {
-            buf.buffer.writeByte(0)
-            buf.buffer.writeInt(0)
+            buf.buffer.writeMedium(5)
+            buf.buffer.writeShort(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
@@ -36,8 +36,8 @@ object Js5PacketCodec {
 
     object LoggedOut : PacketCodec<Js5Packet.LoggedOut> {
         override fun encode(packet: Js5Packet.LoggedOut, buf: BitBuf) {
-            buf.buffer.writeByte(0)
-            buf.buffer.writeInt(0)
+            buf.buffer.writeMedium(5)
+            buf.buffer.writeShort(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }

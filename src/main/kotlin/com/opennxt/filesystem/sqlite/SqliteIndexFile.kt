@@ -13,6 +13,28 @@ class SqliteIndexFile(val path: Path) : Closeable, AutoCloseable {
 
     val connection = DriverManager.getConnection("jdbc:sqlite:$path")
 
+    init {
+        connection.prepareStatement(
+            """
+            CREATE TABLE IF NOT EXISTS `cache`(
+              `KEY` INTEGER PRIMARY KEY,
+              `DATA` BLOB,
+              `VERSION` INTEGER,
+              `CRC` INTEGER
+            );
+        """.trimIndent()).use { stmt -> stmt.executeUpdate() }
+
+        connection.prepareStatement(
+            """
+            CREATE TABLE IF NOT EXISTS `cache_index`(
+              `KEY` INTEGER PRIMARY KEY,
+              `DATA` BLOB,
+              `VERSION` INTEGER,
+              `CRC` INTEGER
+            );
+        """.trimIndent()).use { stmt -> stmt.executeUpdate() }
+    }
+
     val archiveExistsStmt = connection.prepareStatement("SELECT 1 FROM `cache` WHERE `KEY` = ?;")
     val getMaxArchiveStmt = connection.prepareStatement("SELECT MAX(`KEY`) FROM `cache`;")
     val getArchiveDataStmt = connection.prepareStatement("SELECT `DATA` FROM `cache` WHERE `KEY` = ?;")

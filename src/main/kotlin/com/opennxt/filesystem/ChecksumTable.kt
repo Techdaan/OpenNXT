@@ -15,6 +15,30 @@ class ChecksumTable(val entries: Array<TableEntry>) {
         companion object {
             val EMPTY = TableEntry(0, 0, 0, 0, ByteArray(64))
         }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as TableEntry
+
+            if (crc != other.crc) return false
+            if (version != other.version) return false
+            if (files != other.files) return false
+            if (size != other.size) return false
+            if (!whirlpool.contentEquals(other.whirlpool)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = crc
+            result = 31 * result + version
+            result = 31 * result + files
+            result = 31 * result + size
+            result = 31 * result + whirlpool.contentHashCode()
+            return result
+        }
     }
 
     companion object {
@@ -96,4 +120,20 @@ class ChecksumTable(val entries: Array<TableEntry>) {
             return bout.toByteArray()
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ChecksumTable
+
+        if (!entries.contentEquals(other.entries)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return entries.contentHashCode()
+    }
+
 }

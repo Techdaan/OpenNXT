@@ -15,10 +15,13 @@ class SqliteFilesystem(path: Path) : Filesystem(path) {
     var indices: Array<SqliteIndexFile?>
 
     init {
-        logger.info("Opening SQLite filesystem from $path")
+        if (!Files.exists(path))
+            Files.createDirectories(path)
+
+        logger.info { "Opening SQLite filesystem from $path" }
         var count = 0
         while (count < 255 && Files.exists(path.resolve("js5-$count.jcache"))) count++
-        logger.debug("Discovered a total of $count indices...")
+        logger.info { "Discovered a total of $count indices..." }
 
         indices = Array(count) { i ->
             val file = SqliteIndexFile(path.resolve("js5-$i.jcache"))
@@ -37,38 +40,10 @@ class SqliteFilesystem(path: Path) : Filesystem(path) {
         }
 
         val tmp = indices
-        this.indices = Array(id) {
+        this.indices = Array(id + 1) {
             if (it != id)
                 return@Array tmp[it]
-            val file = SqliteIndexFile(path.resolve("js5-$it.jcache"))
-
-            file.connection.use { conn ->
-                conn.prepareStatement(
-                """
-            CREATE TABLE IF NOT EXISTS `cache`(
-              `KEY` INTEGER PRIMARY KEY,
-              `DATA` BLOB,
-              `VERSION` INTEGER,
-              `CRC` INTEGER
-            );
-        """.trimIndent()
-                ).use { stmt -> stmt.executeUpdate() }
-            }
-
-            file.connection.use { conn ->
-                conn.prepareStatement(
-                    """
-            CREATE TABLE IF NOT EXISTS `cache_index`(
-              `KEY` INTEGER PRIMARY KEY,
-              `DATA` BLOB,
-              `VERSION` INTEGER,
-              `CRC` INTEGER
-            );
-        """.trimIndent()
-                ).use { stmt -> stmt.executeUpdate() }
-            }
-
-            file
+            SqliteIndexFile(path.resolve("js5-$it.jcache"))
         }
     }
 

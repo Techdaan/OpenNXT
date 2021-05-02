@@ -15,7 +15,7 @@ fun ByteBuffer.toByteArray(): ByteArray {
 
 fun ByteBuffer.getCrc32(): Int {
     val crc = CRC32()
-    for (i in 0 until capacity()) {
+    for (i in position() until capacity()) {
         crc.update(get(i).toInt())
     }
     return crc.value.toInt()
