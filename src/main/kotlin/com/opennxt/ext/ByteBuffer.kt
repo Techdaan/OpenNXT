@@ -14,11 +14,11 @@ fun ByteBuffer.toByteArray(): ByteArray {
 }
 
 fun ByteBuffer.getCrc32(): Int {
-    val crc = CRC32()
-    for (i in position() until capacity()) {
-        crc.update(get(i).toInt())
-    }
-    return crc.value.toInt()
+        val crc = CRC32()
+        for (i in 0 until limit()) {
+            crc.update(get(i).toInt())
+        }
+        return crc.value.toInt()
 }
 
 fun ByteBuffer.getWhirlpool(): ByteArray {

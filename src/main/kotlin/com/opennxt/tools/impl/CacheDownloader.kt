@@ -20,6 +20,7 @@ import com.opennxt.net.handshake.HandshakeType
 import com.opennxt.net.js5.packet.Js5Packet
 import com.opennxt.net.js5.packet.Js5PacketCodec
 import com.opennxt.tools.Tool
+import com.opennxt.util.Whirlpool
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.channel.Channel
@@ -35,6 +36,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import mu.KotlinLogging
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.exitProcess
@@ -42,11 +44,54 @@ import kotlin.system.exitProcess
 class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache from Jagex' JS5 servers") {
     val ip by option(help = "Live js5 server ip").default("content.runescape.com")
     val port by option(help = "Live js5 server port").int().default(43594)
-    val connections by option(help = "The amount of concurrent connections").int().default(1)
+    val connections by option(help = "The amount of concurrent connections").int().default(4)
 
     val bootstrap = Bootstrap()
     val workerGroup = NioEventLoopGroup(8)
     lateinit var cache: Filesystem
+
+    private class TableChecker(
+        val cache: Filesystem,
+        val index: Int,
+        val table: ReferenceTable,
+        val out: MutableCollection<FileRequest>
+    ) : Runnable {
+        var currentArchive = 0
+        val maxArchive = table.highestEntry()
+
+        var currentBytesChecked = 0L
+        val maxBytesChecked = table.totalCompressedSize()
+
+        override fun run() {
+            for (id in 0 until table.highestEntry()) {
+                currentArchive = id
+                val archive = table.archives[id] ?: continue
+
+                try {
+                    val existing = cache.read(index, id)
+                    if (existing == null) {
+                        out += FileRequest(false, index, id, archive.compressedSize)
+                        continue
+                    }
+
+                    val crc = existing.getCrc32()
+                    if (crc != archive.crc) {
+                        out += FileRequest(false, index, id, archive.compressedSize)
+                        continue
+                    }
+
+                    existing.position(existing.capacity() - 2)
+                    val version = existing.short.toInt() and 0xffff
+                    if (version != archive.version) {
+                        out += FileRequest(false, index, id, archive.compressedSize)
+                        continue
+                    }
+                } finally {
+                    currentBytesChecked += archive.compressedSize
+                }
+            }
+        }
+    }
 
     private object Js5ClientWorkerThread : Thread("js5-client-worker") {
         private val logger = KotlinLogging.logger { }
@@ -57,12 +102,31 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
         val contexts = Sets.newConcurrentHashSet<Js5ConnectionContext>()
         val running = AtomicBoolean(true)
 
-        val toRequest = ConcurrentLinkedQueue<FileRequest>()
+        val toRequest = ConcurrentLinkedQueue<FileRequest>() // list of requests that are yet to be executed
 
         val existingTables = arrayOfNulls<ReferenceTable>(255)
         val updatingTables = arrayOfNulls<ReferenceTable>(255)
 
-        val pendingTables = HashSet<Int>()
+        val pendingTables = Sets.newConcurrentHashSet<Int>()
+        val runningTableChecks = ConcurrentHashMap<Int, TableChecker>()
+
+        var lastStatusUpdate = System.currentTimeMillis()
+
+        fun checkTable(index: Int, table: ReferenceTable) {
+            if (index == 40) {
+                logger.warn { "TODO - HTTP js5 downloader for index $index" }
+                return
+            }
+
+            val checker = TableChecker(tool.cache, index, table, toRequest)
+            runningTableChecks[index] = checker
+            logger.info { "Checking index $index (${checker.currentArchive}/${checker.maxArchive} archives, ${checker.currentBytesChecked / 1024 / 1024}/${checker.maxBytesChecked / 1024 / 1024}MB checked)" }
+            Thread({
+                checker.run()
+                runningTableChecks.remove(index)
+                logger.info { "Done checking index $index" }
+            }, "table-checker-index-$index").start()
+        }
 
         fun setupTables() {
             logger.info { "Setting up tables / files to request" }
@@ -103,6 +167,9 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
 
                 // we're good
                 logger.info { "Existing table for index $index is up-to-date" }
+                updatingTables[index] = existing
+
+                checkTable(index, existing)
             }
 
             if (pendingTables.isEmpty()) {
@@ -175,12 +242,43 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
                                 exitProcess(1)
                             }
                             updatingTables[file.archive] = referenceTable
-                            pendingTables.remove(file.archive)
                             buffer.position(0)
                             tool.cache.writeReferenceTable(file.archive, buffer.toByteArray(), container.version, crc)
                             logger.info { "Finished downloading reference table for index ${file.archive}. Waiting for ${pendingTables.size} more tables..." }
+
+                            checkTable(file.archive, referenceTable)
                         } else {
-                            logger.info { "Finished downloading file ${file}, but the result is unhandled!" }
+                            val entry = try {
+                                updatingTables[file.index]!!.archives[file.archive]!!
+                            } catch (e: NullPointerException) {
+                                logger.error { "Couldn't find entry ${file.index}/${file.archive} after it has been downloaded" }
+                                throw e
+                            }
+
+                            val crc = buffer.getCrc32()
+
+                            if (crc != entry.crc) {
+                                logger.error { "CRC mismatch: ${file.index}, ${file.archive}. Got $crc, expected ${entry.crc}" }
+                                exitProcess(1)
+                            }
+
+                            val entryWhirlpool = entry.whirlpool
+                            if (entryWhirlpool != null) {
+                                val downloadedWhirlpool = Whirlpool.getHash(buffer.array(), 0, buffer.limit())
+                                if (!Arrays.equals(entryWhirlpool, downloadedWhirlpool)) {
+                                    logger.error { "Whirlpool mismatch: ${file.index}, ${file.archive}" }
+                                    exitProcess(1)
+                                }
+                            }
+
+                            val version = entry.version
+                            buffer.position(buffer.limit()).limit(buffer.capacity())
+                            buffer.put((version shr 8).toByte())
+                            buffer.put(version.toByte())
+                            buffer.flip()
+
+                            tool.cache.write(file.index, file.archive, buffer.array(), version, entry.crc)
+//                            logger.info { "Finished downloading file ${file}, but the result is unhandled!" }
                         }
 
                         it.remove()
@@ -196,10 +294,40 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
             }
         }
 
+        var bytesDownloaded = 0L
+        val timeBetweenUpdates = 1000
         override fun run() {
             while (running.get()) {
+                if (System.currentTimeMillis() - lastStatusUpdate > timeBetweenUpdates) {
+                    if (runningTableChecks.isNotEmpty()) {
+                        val progressArchive = runningTableChecks.values.sumOf { it.currentArchive }
+                        val maxArchive = runningTableChecks.values.sumOf { it.maxArchive }
+                        val currentChecked = runningTableChecks.values.sumOf { it.currentBytesChecked }
+                        val maxChecked = runningTableChecks.values.sumOf { it.maxBytesChecked }
+
+                        logger.info { "Need to check ${maxArchive - progressArchive} archives in ${runningTableChecks.size} tables (${(maxChecked - currentChecked) / 1024 / 1024}MB remaining)" }
+                    }
+
+                    var remaining = toRequest.size
+                    var downloaded = 0
+                    var downloading = 0
+                    var remainingBytes = toRequest.sumOf { it.entrySize.toLong() }
+
+                    contexts.forEach { ctx ->
+                        remaining += ctx.pending.size
+                        downloaded += ctx.downloaded.size
+                        downloading += ctx.downloading.size
+                        remainingBytes += ctx.pending.sumOf { it.entrySize.toLong() }
+                    }
+
+                    val speed = (bytesDownloaded.toDouble() / 1024.0 / 1024.0) / (timeBetweenUpdates.toDouble() / 1000.0)
+                    logger.info { "Un-started files: $remaining (${remainingBytes / 1024 / 1024}MB). Waiting to save to disk: $downloaded. Currently downloading: $downloading, download speed: ${"%.2f".format(speed)}MB/s" }
+
+                    bytesDownloaded = 0
+                    lastStatusUpdate = System.currentTimeMillis()
+                }
+
                 contexts.forEach { it.process() }
-                sleep(200)
             }
         }
     }
@@ -255,7 +383,7 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
         }
     }
 
-    private data class FileRequest(val priority: Boolean, val index: Int, val archive: Int) {
+    private data class FileRequest(val priority: Boolean, val index: Int, val archive: Int, val entrySize: Int = 0) {
         var buffer: ByteBuffer? = null
         var offset = 0
         var size = 0
@@ -349,6 +477,7 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
                     request.offset += blockSize
                     if (buffer.position() == totalSize) {
                         buffer.flip()
+                        Js5ClientWorkerThread.bytesDownloaded += buffer.limit().toLong()
                         synchronized(context.lock) {
                             context.downloaded[request.hash()] = request
                             if (context.downloading.remove(request.hash()) == null) {

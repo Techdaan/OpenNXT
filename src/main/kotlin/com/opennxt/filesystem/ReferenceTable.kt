@@ -247,6 +247,13 @@ class ReferenceTable(val filesystem: Filesystem, val index: Int) {
         return sum
     }
 
+    fun totalCompressedSize(): Long {
+        var sum = 0L
+        for (value in archives.values)
+            sum += value.compressedSize
+        return sum
+    }
+
     fun loadArchive(id: Int): Archive? {
         val archive = archives[id] ?: return null
         if (archive.loaded) return archive
