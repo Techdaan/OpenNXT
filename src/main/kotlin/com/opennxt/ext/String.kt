@@ -1,5 +1,7 @@
 package com.opennxt.ext
 
+import com.opennxt.util.TextUtils
+
 fun String.toFilesystemHash(): Int {
     val size = length
     var char = 0
