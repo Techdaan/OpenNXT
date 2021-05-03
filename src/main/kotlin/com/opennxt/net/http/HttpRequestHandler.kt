@@ -2,6 +2,7 @@ package com.opennxt.net.http
 
 import com.opennxt.net.http.endpoints.JavConfigWsEndpoint
 import com.opennxt.net.http.endpoints.ClientFileEndpoint
+import com.opennxt.net.http.endpoints.Js5MsEndpoint
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
@@ -31,7 +32,7 @@ class HttpRequestHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
         when {
             query.path() == "/jav_config.ws" -> JavConfigWsEndpoint.handle(ctx, msg, query)
             query.path() == "/client" -> ClientFileEndpoint.handle(ctx, msg, query)
-            // TODO /ms endpoint
+            query.path() == "/ms" -> Js5MsEndpoint.handle(ctx, msg, query)
             else -> ctx.sendHttpError(HttpResponseStatus.NOT_FOUND)
         }
     }
