@@ -11,6 +11,7 @@ import com.opennxt.filesystem.Container
 import com.opennxt.filesystem.Filesystem
 import com.opennxt.filesystem.prefetches.PrefetchTable
 import com.opennxt.filesystem.sqlite.SqliteFilesystem
+import com.opennxt.login.LoginThread
 import com.opennxt.net.RSChannelInitializer
 import com.opennxt.net.http.HttpServer
 import io.netty.bootstrap.ServerBootstrap
@@ -72,6 +73,9 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
         logger.info { "Starting js5 thread" }
         Js5Thread.start()
+
+        logger.info { "Starting login thread" }
+        LoginThread.start()
 
         logger.info { "Starting network" }
         bootstrap.group(NioEventLoopGroup())

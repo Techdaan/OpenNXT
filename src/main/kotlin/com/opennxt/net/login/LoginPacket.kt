@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf
 
 sealed class LoginPacket: IncomingPacket, OutgoingPacket {
     class Response(val code: GenericResponse): LoginPacket()
-    class LobbyLoginRequest(val build: Build, val header: LoginRSAHeader, val username: String, val remaining: ByteBuf): LoginPacket()
+    class LobbyLoginRequest(val build: Build, val header: LoginRSAHeader, val username: String, val password: String, val remaining: ByteBuf): LoginPacket()
 
     class SendUniqueId(val id: Long): LoginPacket()
 }

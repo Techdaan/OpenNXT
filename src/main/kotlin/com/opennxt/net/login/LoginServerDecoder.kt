@@ -71,7 +71,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                             .addListener(ChannelFutureListener.CLOSE)
                     }
 
-                    out.add(LoginPacket.LobbyLoginRequest(build, header, name, Unpooled.wrappedBuffer(original)))
+                    out.add(LoginPacket.LobbyLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
                 }
                 LoginType.GAME -> {
                     ctx.channel()
