@@ -13,6 +13,7 @@ class Js5Session(val channel: Channel) : AutoCloseable {
     companion object {
         val ATTR_KEY = AttributeKey.valueOf<Js5Session>("js5-session")
         val XOR_KEY = AttributeKey.valueOf<Int>("js5-xor-key")
+        val LOGGED_IN = AttributeKey.valueOf<Boolean>("js5-logged-in")
     }
 
     val highPriorityRequests = ConcurrentLinkedQueue<Js5Packet.RequestFile>()
@@ -23,6 +24,7 @@ class Js5Session(val channel: Channel) : AutoCloseable {
     init {
         channel.attr(ATTR_KEY).set(this)
         channel.attr(XOR_KEY).set(0)
+        channel.attr(LOGGED_IN).set(false)
     }
 
     fun initialize() {

@@ -4,23 +4,28 @@ import com.opennxt.net.PacketCodec
 import com.opennxt.net.buf.BitBuf
 
 object Js5PacketCodec {
-    object Magic : PacketCodec<Js5Packet.Magic> {
-        override fun encode(packet: Js5Packet.Magic, buf: BitBuf) {
+    object ConnectionInitialized : PacketCodec<Js5Packet.ConnectionInitialized> {
+        val opcode = 6
+
+        override fun encode(packet: Js5Packet.ConnectionInitialized, buf: BitBuf) {
             buf.buffer.writeMedium(packet.value)
             buf.buffer.writeShort(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.Magic {
-            return Js5Packet.Magic(
-                buf.buffer.readMedium(),
-                buf.buffer.readUnsignedShort()
-            )
+        override fun decode(buf: BitBuf): Js5Packet.ConnectionInitialized {
+            val magic = buf.buffer.readMedium()
+            buf.buffer.skipBytes(2)
+            val build = buf.buffer.readUnsignedShort()
+            buf.buffer.skipBytes(2)
+            return Js5Packet.ConnectionInitialized(magic, build)
         }
     }
 
     object LoggedIn : PacketCodec<Js5Packet.LoggedIn> {
+        val opcode = 2
+
         override fun encode(packet: Js5Packet.LoggedIn, buf: BitBuf) {
             buf.buffer.writeMedium(5)
             buf.buffer.writeShort(0)
@@ -30,11 +35,15 @@ object Js5PacketCodec {
 
         override fun decode(buf: BitBuf): Js5Packet.LoggedIn {
             buf.buffer.skipBytes(5)
-            return Js5Packet.LoggedIn(buf.buffer.readUnsignedShort())
+            val build = buf.buffer.readUnsignedShort()
+            buf.buffer.skipBytes(2)
+            return Js5Packet.LoggedIn(build)
         }
     }
 
     object LoggedOut : PacketCodec<Js5Packet.LoggedOut> {
+        val opcode = 3
+
         override fun encode(packet: Js5Packet.LoggedOut, buf: BitBuf) {
             buf.buffer.writeMedium(5)
             buf.buffer.writeShort(0)
@@ -44,25 +53,35 @@ object Js5PacketCodec {
 
         override fun decode(buf: BitBuf): Js5Packet.LoggedOut {
             buf.buffer.skipBytes(5)
-            return Js5Packet.LoggedOut(buf.buffer.readUnsignedShort())
+            val build = buf.buffer.readUnsignedShort()
+            buf.buffer.skipBytes(2)
+            return Js5Packet.LoggedOut(build)
         }
     }
 
-    object RequestTermination : PacketCodec<Js5Packet.LoggedIn> {
-        override fun encode(packet: Js5Packet.LoggedIn, buf: BitBuf) {
+    object RequestTermination : PacketCodec<Js5Packet.RequestTermination> {
+        val opcode = 7
+
+        override fun encode(packet: Js5Packet.RequestTermination, buf: BitBuf) {
             buf.buffer.writeByte(0)
             buf.buffer.writeInt(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.LoggedIn {
+        override fun decode(buf: BitBuf): Js5Packet.RequestTermination {
             buf.buffer.skipBytes(5)
-            return Js5Packet.LoggedIn(buf.buffer.readUnsignedShort())
+            val build = buf.buffer.readUnsignedShort()
+            buf.buffer.skipBytes(2)
+            return Js5Packet.RequestTermination(build)
         }
     }
 
     object RequestFile : PacketCodec<Js5Packet.RequestFile> {
+        val opcodeNxtLow = 32
+        val opcodeNxtHigh1 = 17
+        val opcodeNxtHigh2 = 33
+
         override fun decode(buf: BitBuf): Js5Packet.RequestFile {
             return Js5Packet.RequestFile(
                 false,
@@ -113,6 +132,22 @@ object Js5PacketCodec {
             val language = buf.buffer.readUnsignedByte().toInt()
 
             return Js5Packet.Handshake(major, minor, tokenArr.toString(Charsets.US_ASCII), language)
+        }
+    }
+
+    object XorRequest : PacketCodec<Js5Packet.XorRequest> {
+        val opcode = 4
+
+        override fun encode(packet: Js5Packet.XorRequest, buf: BitBuf) {
+            buf.buffer.writeByte(packet.xor)
+            buf.buffer.writeInt(0) // TODO Figure out which offset is xor
+            buf.buffer.writeInt(0)
+        }
+
+        override fun decode(buf: BitBuf): Js5Packet.XorRequest {
+            val xor = buf.buffer.readUnsignedByte().toInt()
+            buf.buffer.skipBytes(8)
+            return Js5Packet.XorRequest(xor)
         }
     }
 

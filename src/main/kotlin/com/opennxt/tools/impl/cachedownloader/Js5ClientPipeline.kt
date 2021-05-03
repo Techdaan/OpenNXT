@@ -138,9 +138,9 @@ object Js5ClientPipeline {
                     out.writeByte(opcode)
                     Js5PacketCodec.RequestFile.encode(msg, BitBuf(out))
                 }
-                is Js5Packet.Magic -> {
+                is Js5Packet.ConnectionInitialized -> {
                     out.writeByte(6)
-                    Js5PacketCodec.Magic.encode(msg, BitBuf(out))
+                    Js5PacketCodec.ConnectionInitialized.encode(msg, BitBuf(out))
                 }
                 is Js5Packet.LoggedIn -> {
                     out.writeByte(2)
@@ -171,7 +171,7 @@ object Js5ClientPipeline {
                 }
                 is Js5Packet.Prefetches -> {
                     client.state = Js5ClientState.ACTIVE
-                    ctx.channel().write(Js5Packet.Magic(5, client.version))
+                    ctx.channel().write(Js5Packet.ConnectionInitialized(5, client.version))
                     ctx.channel().write(Js5Packet.LoggedOut(client.version))
                     ctx.channel().flush()
                     client.notifyConnected()

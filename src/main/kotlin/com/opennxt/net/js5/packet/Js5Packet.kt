@@ -3,7 +3,7 @@ package com.opennxt.net.js5.packet
 import com.opennxt.net.Packet
 
 sealed class Js5Packet : Packet {
-    data class Magic(val value: Int, val build: Int) : Js5Packet()
+    data class ConnectionInitialized(val value: Int, val build: Int) : Js5Packet()
     data class LoggedIn(val build: Int) : Js5Packet()
     data class LoggedOut(val build: Int) : Js5Packet()
     data class RequestTermination(val build: Int) : Js5Packet()
@@ -17,6 +17,7 @@ sealed class Js5Packet : Packet {
         var bytesSent = 0
     }
     data class Handshake(val major: Int, val minor: Int, val token: String, val language: Int = 0) : Js5Packet()
+    data class XorRequest(val xor: Int): Js5Packet()
 
     // TODO Responses here
     data class HandshakeResponse(val code: Int): Js5Packet()
