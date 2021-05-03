@@ -142,7 +142,7 @@ class ClientPatcher :
     }
 
     private fun patchConfig(type: BinaryType, config: ClientConfig, filesPath: Path) {
-        config["codebase"] = serverConfig.hostname
+        config["codebase"] = "http://${serverConfig.hostname}/"
 
         for (i in 0..config.highestParam) {
             val value = config.getParam(i) ?: continue
