@@ -6,6 +6,10 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.opennxt.config.RsaConfig
 import com.opennxt.config.ServerConfig
 import com.opennxt.config.TomlConfig
+import com.opennxt.filesystem.ChecksumTable
+import com.opennxt.filesystem.Filesystem
+import com.opennxt.filesystem.prefetches.PrefetchTable
+import com.opennxt.filesystem.sqlite.SqliteFilesystem
 import com.opennxt.net.RSChannelInitializer
 import com.opennxt.net.http.HttpServer
 import io.netty.bootstrap.ServerBootstrap
@@ -25,6 +29,11 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
     lateinit var rsaConfig: RsaConfig
 
     lateinit var http: HttpServer
+    lateinit var prefetches: PrefetchTable
+    lateinit var checksumTable: ByteArray
+    lateinit var httpChecksumTable: ByteArray
+
+    lateinit var filesystem: Filesystem
 
     private val bootstrap = ServerBootstrap()
 
@@ -47,6 +56,18 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
         http = HttpServer(config)
         http.init(skipHttpFileVerification)
         http.bind()
+
+        logger.info { "Opening filesystem from ${Constants.CACHE_PATH}" }
+        filesystem = SqliteFilesystem(Constants.CACHE_PATH)
+
+        logger.info { "Generating prefetch table" }
+        prefetches = PrefetchTable.of(filesystem)
+
+        logger.info { "Generating & encoding checksum tables" }
+        checksumTable = ChecksumTable.create(filesystem, false)
+            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
+        httpChecksumTable = ChecksumTable.create(filesystem, true)
+            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
 
         logger.info("Starting network")
         bootstrap.group(NioEventLoopGroup())
