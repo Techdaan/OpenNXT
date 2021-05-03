@@ -33,6 +33,40 @@ fun ByteBuf.writeString(string: String) {
 }
 
 // I don't want to talk about it. I don't want to improve it. I don't want anything to do with this shit.
+fun ByteBuf.encipherXtea(keys: IntArray, start: Int = readerIndex(), end: Int = readerIndex() + readableBytes()) {
+    val readerIndex = readerIndex()
+    val writerIndex = writerIndex()
+
+    readerIndex(start)
+    val stopAt = (end - start) / 8
+    for(i in 0 until stopAt) {
+        var int1 = readInt()
+        var int2 = readInt()
+
+        var a = 0
+        val b = -1640531527
+        var c = 32
+        while (c-- > 0) {
+            int1 += (int2 + (int2 shl 4 xor int2.ushr(5)) xor a + keys[a and 0x3])
+            a += b
+            int2 += (int1 + (int1 shl 4 xor int1.ushr(5)) xor a + keys[a.ushr(11) and 0x3])
+        }
+
+        val originalReaderIndex = readerIndex()
+        readerIndex(0)
+
+        writerIndex(originalReaderIndex - 8)
+        writeInt(int1)
+        writeInt(int2)
+
+        readerIndex(originalReaderIndex)
+        writerIndex(writerIndex)
+    }
+
+    writerIndex(writerIndex)
+    readerIndex(readerIndex)
+}
+
 fun ByteBuf.decipherXtea(keys: IntArray, start: Int = readerIndex(), end: Int = readerIndex() + readableBytes()) {
     val readerIndex = readerIndex()
     val writerIndex = writerIndex()
