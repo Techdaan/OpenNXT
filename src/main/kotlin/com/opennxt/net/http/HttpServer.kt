@@ -26,8 +26,12 @@ class HttpServer(val config: ServerConfig) : AutoCloseable {
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30_000)
 
-    fun init() {
-        FileChecker.checkFiles("compressed")
+    fun init(skipFileChecks: Boolean) {
+        if (skipFileChecks) {
+            logger.info { "Skipping http file verification" }
+        } else {
+            FileChecker.checkFiles("compressed")
+        }
         // TODO Checksum table?
 
         initialized = true

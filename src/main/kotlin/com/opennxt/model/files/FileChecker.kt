@@ -1,16 +1,20 @@
 package com.opennxt.model.files
 
 import com.opennxt.Constants
+import com.opennxt.OpenNXT
+import com.opennxt.config.RsaConfig
+import com.opennxt.tools.impl.ClientPatcher
 import lzma.sdk.lzma.Decoder
 import lzma.streams.LzmaInputStream
 import mu.KotlinLogging
 import java.io.ByteArrayInputStream
 import java.io.FileNotFoundException
 import java.nio.file.Files
+import java.util.*
 import java.util.zip.CRC32
 
 object FileChecker {
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     fun latestBuild(): Int {
         var build = -1
@@ -24,7 +28,7 @@ object FileChecker {
         return build
     }
 
-    fun checkFiles(type: String = "compressed") {
+    fun checkFiles(type: String = "compressed", rsaConfig: RsaConfig = OpenNXT.rsaConfig) {
         logger.info { "Checking client files from ${Constants.CLIENTS_PATH}, type '$type'" }
         if (!Files.exists(Constants.CLIENTS_PATH))
             throw FileNotFoundException("${Constants.CLIENTS_PATH} not found. Please `run-tool client-downloader`.")
@@ -53,16 +57,20 @@ object FileChecker {
                 if (!Files.exists(downloadPath))
                     throw FileNotFoundException("$downloadPath")
 
+                val decompressed = decompressLZMA(Files.readAllBytes(downloadPath))
+
                 crc.reset()
-                crc.update(decompressLZMA(Files.readAllBytes(downloadPath)))
+                crc.update(decompressed)
                 if (crc.value != downloadInformation.crc)
                     throw IllegalStateException("CRC mismatch in binary $binaryType file ${downloadInformation.name}")
 
-                // TODO Hash validation
+                val expectedHash = ClientPatcher.generateFileHash(decompressed, rsaConfig.launcher.modulus, rsaConfig.launcher.exponent)
+                if (expectedHash != downloadInformation.hash)
+                    throw IllegalStateException("Hash mismatch in binary $binaryType file ${downloadInformation.name}")
             }
         }
 
-        logger.info("Files are all OK")
+        logger.info("Client files are all OK (checked existence, crc and hash)")
     }
 
     private fun decompressLZMA(raw: ByteArray): ByteArray =

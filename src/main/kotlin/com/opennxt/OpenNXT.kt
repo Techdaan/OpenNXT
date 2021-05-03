@@ -1,6 +1,8 @@
 package com.opennxt
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import com.opennxt.config.RsaConfig
 import com.opennxt.config.ServerConfig
 import com.opennxt.config.TomlConfig
@@ -10,6 +12,8 @@ import java.io.FileNotFoundException
 import kotlin.system.exitProcess
 
 object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT server)") {
+    val skipHttpFileVerification by option(help = "Skips file verification when http server starts").flag(default = false)
+
     private val logger = KotlinLogging.logger {}
 
     lateinit var config: ServerConfig
@@ -34,8 +38,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
         logger.info { "Setting up HTTP server" }
         http = HttpServer(config)
-        http.init()
+        http.init(skipHttpFileVerification)
         http.bind()
-
     }
 }

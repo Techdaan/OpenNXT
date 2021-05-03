@@ -156,7 +156,7 @@ class ClientPatcher :
             val data = Files.readAllBytes(filesPath.resolve(file.name))
             val id = file.id
 
-            config["download_hash_$id"] = hash(data, rsaConfig.launcher.modulus, rsaConfig.launcher.exponent)
+            config["download_hash_$id"] = generateFileHash(data, rsaConfig.launcher.modulus, rsaConfig.launcher.exponent)
             config["download_crc_$id"] = crc32(data).toString()
         }
 
@@ -235,17 +235,19 @@ class ClientPatcher :
         return crc.value
     }
 
-    private fun hash(data: ByteArray, modulus: BigInteger, exponent: BigInteger): String {
-        val hash = ByteArray(65)
-        hash[0] = 10
-        Whirlpool.getHash(data, 0, data.size).copyInto(hash, 1)
+    companion object {
+        fun generateFileHash(data: ByteArray, modulus: BigInteger, exponent: BigInteger): String {
+            val hash = ByteArray(65)
+            hash[0] = 10
+            Whirlpool.getHash(data, 0, data.size).copyInto(hash, 1)
 
-        val rsa = BigInteger(hash).modPow(exponent, modulus).toByteArray()
+            val rsa = BigInteger(hash).modPow(exponent, modulus).toByteArray()
 
-        return Base64.getEncoder().encodeToString(rsa)
-            .replace("\\+".toRegex(), "\\*")
-            .replace("/".toRegex(), "\\-")
-            .replace("=".toRegex(), "")
+            return Base64.getEncoder().encodeToString(rsa)
+                .replace("\\+".toRegex(), "\\*")
+                .replace("/".toRegex(), "\\-")
+                .replace("=".toRegex(), "")
+        }
     }
 
     class RSLZMAEncoderWrapper(
