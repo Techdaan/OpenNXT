@@ -10,7 +10,6 @@ import mu.KotlinLogging
 import java.io.ByteArrayInputStream
 import java.io.FileNotFoundException
 import java.nio.file.Files
-import java.util.*
 import java.util.zip.CRC32
 
 object FileChecker {
@@ -26,6 +25,43 @@ object FileChecker {
             }
         }
         return build
+    }
+
+    fun getFile(
+        folder: String = "compressed",
+        type: BinaryType = BinaryType.WIN64,
+        build: Int = OpenNXT.config.build,
+        file: String,
+        crc: Long
+    ): ByteArray? {
+        val path = Constants.CLIENTS_PATH.resolve(build.toString()).resolve(type.name.toLowerCase()).resolve(folder)
+            .resolve(file)
+
+        val config = getConfig(folder, type, build) ?: return null
+        val info = config.getFiles().firstOrNull { it.name == file } ?: return null
+        if (info.crc != crc) return null
+
+        if (!Files.exists(path)) {
+            logger.error { "$file not found in $path (it should exist though)" }
+            return null
+        }
+
+        return Files.readAllBytes(path)
+    }
+
+    fun getConfig(
+        folder: String = "compressed",
+        type: BinaryType = BinaryType.WIN64,
+        build: Int = OpenNXT.config.build
+    ): ClientConfig? {
+        val path = Constants.CLIENTS_PATH.resolve(build.toString()).resolve(type.name.toLowerCase()).resolve(folder)
+            .resolve("jav_config.ws")
+        if (!Files.exists(path)) {
+            logger.error { "jav_config.ws not found in $path (it should exist though)" }
+            return null
+        }
+
+        return ClientConfig.load(path)
     }
 
     fun checkFiles(type: String = "compressed", rsaConfig: RsaConfig = OpenNXT.rsaConfig) {
@@ -64,7 +100,11 @@ object FileChecker {
                 if (crc.value != downloadInformation.crc)
                     throw IllegalStateException("CRC mismatch in binary $binaryType file ${downloadInformation.name}")
 
-                val expectedHash = ClientPatcher.generateFileHash(decompressed, rsaConfig.launcher.modulus, rsaConfig.launcher.exponent)
+                val expectedHash = ClientPatcher.generateFileHash(
+                    decompressed,
+                    rsaConfig.launcher.modulus,
+                    rsaConfig.launcher.exponent
+                )
                 if (expectedHash != downloadInformation.hash)
                     throw IllegalStateException("Hash mismatch in binary $binaryType file ${downloadInformation.name}")
             }

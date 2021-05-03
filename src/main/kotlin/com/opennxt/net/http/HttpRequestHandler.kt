@@ -1,5 +1,7 @@
 package com.opennxt.net.http
 
+import com.opennxt.net.http.endpoints.JavConfigWsEndpoint
+import com.opennxt.net.http.endpoints.ClientFileEndpoint
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
@@ -10,8 +12,8 @@ import io.netty.handler.codec.http.QueryStringDecoder
 import mu.KotlinLogging
 
 @ChannelHandler.Sharable
-class HttpRequestHandler: SimpleChannelInboundHandler<FullHttpRequest>() {
-    private val logger = KotlinLogging.logger {  }
+class HttpRequestHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
+    private val logger = KotlinLogging.logger { }
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
         if (!msg.decoderResult().isSuccess) {
@@ -26,13 +28,16 @@ class HttpRequestHandler: SimpleChannelInboundHandler<FullHttpRequest>() {
         val uri = msg.uri()
         val query = QueryStringDecoder(uri)
 
-        logger.debug("Received request path: ${query.path()}")
+        logger.info { "Received request path: ${query.path()}" }
         when {
+            query.path() == "/jav_config.ws" -> JavConfigWsEndpoint.handle(ctx, msg, query)
+            query.path() == "/client" -> ClientFileEndpoint.handle(ctx, msg, query)
             else -> ctx.sendHttpError(HttpResponseStatus.NOT_FOUND)
         }
     }
 
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        cause.printStackTrace()
         if (ctx.channel().isActive) {
             ctx.sendHttpError(HttpResponseStatus.INTERNAL_SERVER_ERROR)
         }

@@ -55,14 +55,7 @@ data class ClientConfig(private val entries: MutableMap<String, String> = Object
             if (!Files.exists(path.parent))
                 Files.createDirectories(path.parent)
 
-            val entries = ArrayList<String>()
-            config.entries.forEach { (k, v) -> entries += "$k=$v" }
-            entries.sort()
-
-            val jnr = StringJoiner("\n")
-            entries.forEach(jnr::add)
-
-            Files.write(path, jnr.toString().toByteArray(Charsets.UTF_8))
+            Files.write(path, config.toString().toByteArray(Charsets.UTF_8))
         }
     }
 
@@ -107,4 +100,15 @@ data class ClientConfig(private val entries: MutableMap<String, String> = Object
     }
 
     operator fun get(key: String): String? = entries[key]
+
+    override fun toString(): String {
+        val entries = ArrayList<String>()
+        this.entries.forEach { (k, v) -> entries += "$k=$v" }
+        entries.sort()
+
+        val jnr = StringJoiner("\n")
+        entries.forEach(jnr::add)
+
+        return jnr.toString()
+    }
 }

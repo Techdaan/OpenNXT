@@ -14,6 +14,8 @@ class ServerConfig : TomlConfig() {
     var hostname = "127.0.0.1"
     var configUrl = "http://127.0.0.1/jav_config.ws?binaryType=2"
 
+    var build = 918
+
     override fun save(map: MutableMap<String, Any>) {
         map["networking"] = mapOf(
             "ports" to mapOf(
@@ -24,11 +26,13 @@ class ServerConfig : TomlConfig() {
         )
         map["hostname"] = hostname
         map["configUrl"] = configUrl
+        map["build"] = build
     }
 
     override fun load(toml: Toml) {
         hostname = toml.getString("hostname", hostname)
         configUrl = toml.getString("configUrl", configUrl)
+        build = toml.getLong("build", build.toLong()).toInt()
 
         val networking = toml.getTable("networking")
         if (networking != null) {
