@@ -28,10 +28,10 @@ class HttpRequestHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
         val uri = msg.uri()
         val query = QueryStringDecoder(uri)
 
-        logger.info { "Received request path: ${query.path()}" }
         when {
             query.path() == "/jav_config.ws" -> JavConfigWsEndpoint.handle(ctx, msg, query)
             query.path() == "/client" -> ClientFileEndpoint.handle(ctx, msg, query)
+            // TODO /ms endpoint
             else -> ctx.sendHttpError(HttpResponseStatus.NOT_FOUND)
         }
     }

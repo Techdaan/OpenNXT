@@ -7,6 +7,7 @@ import com.opennxt.config.RsaConfig
 import com.opennxt.config.ServerConfig
 import com.opennxt.config.TomlConfig
 import com.opennxt.filesystem.ChecksumTable
+import com.opennxt.filesystem.Container
 import com.opennxt.filesystem.Filesystem
 import com.opennxt.filesystem.prefetches.PrefetchTable
 import com.opennxt.filesystem.sqlite.SqliteFilesystem
@@ -64,12 +65,15 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
         prefetches = PrefetchTable.of(filesystem)
 
         logger.info { "Generating & encoding checksum tables" }
-        checksumTable = ChecksumTable.create(filesystem, false)
-            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
-        httpChecksumTable = ChecksumTable.create(filesystem, true)
-            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
+        checksumTable = Container.wrap(ChecksumTable.create(filesystem, false)
+            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)).array()
+        httpChecksumTable = Container.wrap(ChecksumTable.create(filesystem, true)
+            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)).array()
 
-        logger.info("Starting network")
+        logger.info { "Starting js5 thread" }
+        Js5Thread.start()
+
+        logger.info { "Starting network" }
         bootstrap.group(NioEventLoopGroup())
             .channel(NioServerSocketChannel::class.java)
             .childHandler(RSChannelInitializer())

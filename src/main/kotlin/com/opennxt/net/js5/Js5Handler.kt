@@ -1,5 +1,6 @@
 package com.opennxt.net.js5
 
+import com.opennxt.Js5Thread
 import com.opennxt.OpenNXT
 import com.opennxt.net.js5.packet.Js5Packet
 import io.netty.channel.ChannelHandlerContext
@@ -30,5 +31,10 @@ class Js5Handler(val session: Js5Session): SimpleChannelInboundHandler<Js5Packet
 
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         logger.warn(cause) { "Caught exception" }
+    }
+
+    override fun channelInactive(ctx: ChannelHandlerContext) {
+        // remove session if the client connection drops and doesn't send the termination packet
+        Js5Thread.removeSession(session)
     }
 }

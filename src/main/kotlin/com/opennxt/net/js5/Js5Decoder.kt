@@ -52,6 +52,9 @@ class Js5Decoder(val session: Js5Session) : ByteToMessageDecoder() {
                 val request = Js5PacketCodec.RequestFile.decode(BitBuf(buf))
                 request.priority = opcode != Js5PacketCodec.RequestFile.opcodeNxtLow
                 logger.info { "Requested file ${request.index}, ${request.archive}. Priority: ${request.priority}" }
+
+                if (request.priority) session.highPriorityRequests.add(request)
+                else session.lowPriorityRequests.add(request)
             }
 
             Js5PacketCodec.ConnectionInitialized.opcode -> {
