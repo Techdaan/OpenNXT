@@ -6,6 +6,6 @@ import com.opennxt.tools.ToolExecutor
 
 fun main(args: Array<String>) {
     NoRunCliktCommand(name = "open-nxt", help = "Base command for the OpenNXT server")
-        .subcommands(ToolExecutor)
+        .subcommands(OpenNXT, ToolExecutor)
         .main(args)
 }

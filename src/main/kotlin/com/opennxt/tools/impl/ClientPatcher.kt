@@ -17,6 +17,8 @@ import com.opennxt.util.Whirlpool
 import lzma.sdk.lzma.Encoder
 import lzma.streams.LzmaEncoderWrapper
 import lzma.streams.LzmaOutputStream
+import org.cservenak.streams.Coder
+import org.cservenak.streams.CoderOutputStream
 import java.io.*
 import java.math.BigInteger
 import java.nio.file.Files
@@ -24,6 +26,7 @@ import java.nio.file.Path
 import java.util.*
 import java.util.zip.CRC32
 import kotlin.system.exitProcess
+
 
 class ClientPatcher :
     Tool("client-patcher", "Patches all clients and configs files. Uses most recent revision by default") {
@@ -109,7 +112,7 @@ class ClientPatcher :
             Files.copy(toDirectory.resolve("jav_config.ws"), compressedDirectory.resolve("jav_config.ws"))
             config.getFiles().forEach { file ->
                 logger.info { "Compressing ${file.name}" }
-                val compressed = LZMAEncoder.compress(Files.readAllBytes(toDirectory.resolve(file.name)))
+                val compressed = RSLZMAOutputStream.compress(Files.readAllBytes(toDirectory.resolve(file.name)))
                 Files.write(compressedDirectory.resolve(file.name), compressed)
             }
         }
@@ -118,7 +121,9 @@ class ClientPatcher :
         if (!Files.exists(Constants.LAUNCHERS_PATH) || Files.list(Constants.LAUNCHERS_PATH).count() == 0L) {
             logger.warn { "No launchers found in ${Constants.LAUNCHERS_PATH}" }
             logger.warn { "Unable to patch launchers" }
-            logger.warn { "Please place the un-patched Windows launcher in ${Constants.LAUNCHERS_PATH.resolve("win").resolve("original.exe")}" }
+            logger.warn { "Please place the un-patched Windows launcher in ${Constants.LAUNCHERS_PATH.resolve("win").resolve(
+                "original.exe"
+            )}" }
             return
         }
 
@@ -243,43 +248,42 @@ class ClientPatcher :
             .replace("=".toRegex(), "")
     }
 
-    private class LZMAEncoder(val size: Long) : LzmaEncoderWrapper(null) {
-
-        private val encoder = Encoder()
-
-        init {
-            encoder.setDictionarySize(8 shl 20)
-            encoder.setNumFastBytes(110)
-            encoder.setMatchFinder(0)
-            encoder.setLcLpPb(3, 0, 2)
-            encoder.setEndMarkerMode(false)
-        }
-
+    class RSLZMAEncoderWrapper(
+        private val encoder: Encoder,
+        private val length: Int
+    ) : Coder {
         override fun code(`in`: InputStream, out: OutputStream) {
             encoder.writeCoderProperties(out)
-
-            for (i in 0..7)
-                out.write(size.ushr(8 * i).toInt() and 0xFF)
-
-            encoder.code(`in`, out, size, -1, null)
+            for (i in 0..7) {
+                out.write((length.toLong() ushr 8 * i).toInt() and 0xFF)
+            }
+            encoder.code(`in`, out, -1, -1, null)
         }
+    }
+
+    class RSLZMAOutputStream : CoderOutputStream {
+        constructor(out: OutputStream, lzmaEncoder: Encoder, length: Int) : super(
+            out,
+            RSLZMAEncoderWrapper(lzmaEncoder, length)
+        )
+
+        constructor(out: OutputStream, wrapper: LzmaEncoderWrapper, length: Int) : super(out, wrapper)
 
         companion object {
+            fun create(out: OutputStream, encoder: Encoder, length: Int): RSLZMAOutputStream {
+                encoder.setDictionarySize(1 shl 23)
+                encoder.setEndMarkerMode(true)
+                encoder.setMatchFinder(1)
+                encoder.setNumFastBytes(0x20)
+                return RSLZMAOutputStream(out, encoder, length)
+            }
+
             fun compress(data: ByteArray): ByteArray {
                 val baos = ByteArrayOutputStream()
-                val bais = ByteArrayInputStream(data)
-                val lzma = LzmaOutputStream(baos, LZMAEncoder(data.size.toLong()))
-
-                try {
-                    ByteStreams.copy(bais, lzma)
-                } catch (e: IOException) {
-                    throw e
-                } finally {
-                    baos.close()
-                    lzma.close()
-                    bais.close()
-                }
-
+                val out = create(baos, Encoder(), data.size)
+                out.write(data)
+                out.flush()
+                out.close()
                 return baos.toByteArray()
             }
         }
