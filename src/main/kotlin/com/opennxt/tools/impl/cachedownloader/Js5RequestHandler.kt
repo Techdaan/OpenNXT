@@ -143,19 +143,8 @@ class Js5RequestHandler(
                 val crashed = HashSet<ArchiveRequest>()
                 synchronized(lock) {
                     pending.forEach { (_, requests) ->
-                        clientPool.addRequestsFromIterator(requests.iterator(), processing)
-
-//                    val it = requests.iterator()
-//                    while (it.hasNext()) {
-//                        val request = it.next()
-//
-//                        if (clientPool.addRequest(request)) {
-//                            processing += request
-//                            it.remove()
-//                        } else {
-//                            break
-//                        }
-//                    }
+                        if (requests.isNotEmpty())
+                            clientPool.addRequestsFromIterator(requests.iterator(), processing)
                     }
 
                     val it = processing.iterator()

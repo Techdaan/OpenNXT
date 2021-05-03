@@ -181,19 +181,43 @@ class CacheDownloader : Tool("cache-downloader", "Updates / downloads the cache 
             .build())
 
         // start music first, big archive over http we can download first for faster overall downloads
-        checkerExecutor.submit(IndexCompletionChecker(cache, 40, requestHandler))
+        val musicChecker = IndexCompletionChecker(cache, 40, requestHandler)
+        checkerExecutor.submit(musicChecker)
+
+        val completionCheckers = HashSet<IndexCompletionChecker>()
         checksumTable.entries.forEachIndexed { index, entry ->
             if (index == 40 || (entry.crc == 0 && entry.version == 0)) return@forEachIndexed
 
-            checkerExecutor.submit(IndexCompletionChecker(cache, index, requestHandler))
+            val checker = IndexCompletionChecker(cache, index, requestHandler)
+            completionCheckers.add(checker)
+            checkerExecutor.submit(checker)
         }
 
         // Other clients in the pool will automatically be opened in the request handler
         Thread(requestHandler, "js5-request-handler").start()
 
-        // TODO while(!completed) instead of infinite loop
+        var doneJs5 = false
+        var doneHttp = false
         while (true) {
             val snapshot = requestHandler.createSnapshot()
+
+            if (!clientPool.closed && completionCheckers.all { it.completed } && snapshot.pendingCount == 0 && snapshot.processingCount == 0) {
+                logger.info { "All js5 operations are done, closing js5 client pool" }
+                clientPool.close()
+                doneJs5 = true
+            }
+
+            if (clientPool.closed && musicChecker.completed && snapshot.pendingHttpCount == 0) {
+                logger.info { "All http operations are done, preparing to shutdown" }
+                doneHttp = true
+            }
+
+            if (doneJs5 && doneHttp && snapshot.pendingIOOPerations == 0) {
+                logger.info { "No more pending IO operations, shutting down remaining things" }
+                logger.error { "We can't close the cache yet. Should probably support that." }
+                exitProcess(0)
+            }
+
             logger.info {
                 "Unassigned: ${snapshot.pendingCount} (~${snapshot.pendingSize / 1024L / 1024L}MB). Assigned: ${snapshot.processingCount} (~${snapshot.processingSize / 1024L / 1024L}MB). Http pending: ${snapshot.pendingHttpCount} (~${snapshot.pendingHttpSize / 1024L / 1024L}MB). Js5 Bandwidth: ${
                     "%.2f".format(

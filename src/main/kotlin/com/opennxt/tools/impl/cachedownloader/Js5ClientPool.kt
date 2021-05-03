@@ -6,6 +6,7 @@ import io.netty.bootstrap.Bootstrap
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioSocketChannel
 import mu.KotlinLogging
+import java.io.Closeable
 import java.lang.Thread.sleep
 import java.net.URL
 import java.util.concurrent.Executors
@@ -15,7 +16,7 @@ class Js5ClientPool(
     private val numHttpClients: Int = 4,
     val ip: String,
     val port: Int
-) {
+) : Closeable {
     private val logger = KotlinLogging.logger { }
 
     private val clients = arrayOfNulls<Js5Client>(numJs5Clients)
@@ -28,6 +29,8 @@ class Js5ClientPool(
     private val workerGroup = NioEventLoopGroup(8)
     private val credentials by lazy { Js5Credentials.download() }
 
+    var closed = false
+
     init {
         bootstrap.group(workerGroup)
         bootstrap.channel(NioSocketChannel::class.java)
@@ -35,12 +38,19 @@ class Js5ClientPool(
     }
 
     fun addRequest(priority: Boolean, index: Int, archive: Int): Js5RequestHandler.ArchiveRequest? {
+        if (closed) throw IllegalStateException("Pool is closed!")
+
         val request = Js5RequestHandler.ArchiveRequest(index, archive, priority)
 
         return if (addRequest(request)) request else null
     }
 
-    fun addRequestsFromIterator(it: MutableIterator<Js5RequestHandler.ArchiveRequest>, outJs5: MutableCollection<Js5RequestHandler.ArchiveRequest>) {
+    fun addRequestsFromIterator(
+        it: MutableIterator<Js5RequestHandler.ArchiveRequest>,
+        outJs5: MutableCollection<Js5RequestHandler.ArchiveRequest>
+    ) {
+        if (closed) throw IllegalStateException("Pool is closed!")
+
         while (it.hasNext()) {
             val request = it.next()
 
@@ -90,6 +100,8 @@ class Js5ClientPool(
     }
 
     fun addRequest(request: Js5RequestHandler.ArchiveRequest): Boolean {
+        if (closed) throw IllegalStateException("Pool is closed!")
+
         val isHttp = request.index == 40
         if (isHttp) {
             httpExecutor.submit(
@@ -119,6 +131,8 @@ class Js5ClientPool(
         clients.first { it != null && it.state.canRead } ?: throw IllegalStateException("No clients available")
 
     fun openConnection(ip: String = this.ip, port: Int = this.port): Js5Client {
+        if (closed) throw IllegalStateException("Pool is closed!")
+
         logger.info { "Opening connection to $ip:$port" }
 
         val channel = bootstrap.connect(ip, port).sync().channel()
@@ -133,6 +147,8 @@ class Js5ClientPool(
     }
 
     fun openConnections(ip: String = this.ip, port: Int = this.port, amount: Int = numJs5Clients) {
+        if (closed) throw IllegalStateException("Pool is closed!")
+
         for (i in 0 until amount) {
             val existing = clients[i]
 
@@ -147,6 +163,10 @@ class Js5ClientPool(
     }
 
     fun healthCheck() {
+        if (closed) {
+            return
+        }
+
         var requiresOpening = false
 
         for (index in clients.indices) {
@@ -183,4 +203,18 @@ class Js5ClientPool(
         }
     }
 
+    override fun close() {
+        closed = true
+
+        for (index in clients.indices) {
+            val client = clients[index]
+
+            if (client != null) {
+                client.channel?.close()?.sync()
+                client.state = Js5ClientState.DISCONNECTED
+                clients[index] = null
+                logger.info { "Closing client (reason = pool close)" }
+            }
+        }
+    }
 }
