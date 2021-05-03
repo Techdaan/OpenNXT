@@ -22,7 +22,8 @@ class SqliteIndexFile(val path: Path) : Closeable, AutoCloseable {
               `VERSION` INTEGER,
               `CRC` INTEGER
             );
-        """.trimIndent()).use { stmt -> stmt.executeUpdate() }
+        """.trimIndent()
+        ).use { stmt -> stmt.executeUpdate() }
 
         connection.prepareStatement(
             """
@@ -32,7 +33,8 @@ class SqliteIndexFile(val path: Path) : Closeable, AutoCloseable {
               `VERSION` INTEGER,
               `CRC` INTEGER
             );
-        """.trimIndent()).use { stmt -> stmt.executeUpdate() }
+        """.trimIndent()
+        ).use { stmt -> stmt.executeUpdate() }
     }
 
     val archiveExistsStmt = connection.prepareStatement("SELECT 1 FROM `cache` WHERE `KEY` = ?;")
@@ -71,17 +73,27 @@ class SqliteIndexFile(val path: Path) : Closeable, AutoCloseable {
     }
 
     fun putRaw(archive: Int, data: ByteArray, version: Int, crc: Int): Int {
-        val stmt = putArchiveDataStmt
-        stmt.clearParameters()
-        stmt.setInt(1, archive)
-        stmt.setBytes(2, data)
-        stmt.setInt(3, version)
-        stmt.setInt(4, crc)
-        stmt.setBytes(5, data)
-        stmt.setInt(6, version)
-        stmt.setInt(7, crc)
-        stmt.setInt(8, archive)
-        return stmt.executeUpdate()
+//        val stmt = putArchiveDataStmt
+        connection.prepareStatement(
+            """
+            INSERT INTO `cache`(`KEY`, `DATA`, `VERSION`, `CRC`)
+              VALUES(?, ?, ?, ?)
+              ON CONFLICT(`KEY`) DO UPDATE SET
+                `DATA` = ?, `VERSION` = ?, `CRC` = ?
+              WHERE `KEY` = ?;
+            """
+        ).use { stmt ->
+            stmt.clearParameters()
+            stmt.setInt(1, archive)
+            stmt.setBytes(2, data)
+            stmt.setInt(3, version)
+            stmt.setInt(4, crc)
+            stmt.setBytes(5, data)
+            stmt.setInt(6, version)
+            stmt.setInt(7, crc)
+            stmt.setInt(8, archive)
+            return stmt.executeUpdate()
+        }
     }
 
     fun hasReferenceTable(): Boolean {
@@ -111,12 +123,14 @@ class SqliteIndexFile(val path: Path) : Closeable, AutoCloseable {
     }
 
     fun getRaw(id: Int): ByteArray? {
-        val stmt = getArchiveDataStmt
-        stmt.clearParameters()
-        stmt.setInt(1, id)
-        stmt.executeQuery().use {
-            if (!it.next()) return null
-            return it.getBytes("DATA")
+//        val stmt = getArchiveDataStmt
+        connection.prepareStatement("SELECT `DATA` FROM `cache` WHERE `KEY` = ?;").use { stmt ->
+            stmt.clearParameters()
+            stmt.setInt(1, id)
+            stmt.executeQuery().use {
+                if (!it.next()) return null
+                return it.getBytes("DATA")
+            }
         }
     }
 

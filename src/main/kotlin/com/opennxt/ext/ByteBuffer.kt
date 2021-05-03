@@ -13,9 +13,9 @@ fun ByteBuffer.toByteArray(): ByteArray {
     return remaining
 }
 
-fun ByteBuffer.getCrc32(): Int {
+fun ByteBuffer.getCrc32(until: Int = limit()): Int {
         val crc = CRC32()
-        for (i in 0 until limit()) {
+        for (i in 0 until until) {
             crc.update(get(i).toInt())
         }
         return crc.value.toInt()
