@@ -13,7 +13,9 @@ sealed class Js5Packet : Packet {
         val archive: Int,
         val build: Int,
         var nxt: Boolean = true
-    ) : Js5Packet()
+    ) : Js5Packet() {
+        var bytesSent = 0
+    }
     data class Handshake(val major: Int, val minor: Int, val token: String, val language: Int = 0) : Js5Packet()
 
     // TODO Responses here
