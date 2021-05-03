@@ -24,6 +24,9 @@ import kotlin.system.exitProcess
 
 object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT server)") {
     val skipHttpFileVerification by option(help = "Skips file verification when http server starts").flag(default = false)
+    val enableProxySupport by option(help = "Enables proxy support. Disable this on live or when you won't use it.").flag(
+        default = false
+    )
 
     private val logger = KotlinLogging.logger {}
 
@@ -54,6 +57,17 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
         logger.info { "Starting OpenNXT" }
         loadConfigurations()
 
+        if (enableProxySupport) {
+            logger.warn { "---------------- WARNING ----------------" }
+            logger.warn { " You are running in proxy-enabled mode." }
+            logger.warn { " Disable this in production environments" }
+            logger.warn { " or when you are not going to use this." }
+            logger.warn { "" }
+            logger.warn { " Remove flag '--enable-proxy-support'." }
+            logger.warn { " to disable." }
+            logger.warn { "---------------- WARNING ----------------" }
+        }
+
         logger.info { "Setting up HTTP server" }
         http = HttpServer(config)
         http.init(skipHttpFileVerification)
@@ -66,10 +80,14 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
         prefetches = PrefetchTable.of(filesystem)
 
         logger.info { "Generating & encoding checksum tables" }
-        checksumTable = Container.wrap(ChecksumTable.create(filesystem, false)
-            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)).array()
-        httpChecksumTable = Container.wrap(ChecksumTable.create(filesystem, true)
-            .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)).array()
+        checksumTable = Container.wrap(
+            ChecksumTable.create(filesystem, false)
+                .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
+        ).array()
+        httpChecksumTable = Container.wrap(
+            ChecksumTable.create(filesystem, true)
+                .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
+        ).array()
 
         logger.info { "Starting js5 thread" }
         Js5Thread.start()

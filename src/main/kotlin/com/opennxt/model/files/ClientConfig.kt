@@ -7,7 +7,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 
-data class ClientConfig(private val entries: MutableMap<String, String> = Object2ObjectOpenHashMap()) {
+data class ClientConfig(val entries: MutableMap<String, String> = Object2ObjectOpenHashMap()) {
     companion object {
         private fun MutableMap<String, String>.readLine(line: String) {
             if (line.isBlank()) return
