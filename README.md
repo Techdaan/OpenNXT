@@ -31,5 +31,5 @@ To set the project up:
    `configUrl` is the URL the launcher will get the `jav_config.ws` from.
    `hostname` is the IP your server runs on 
 5. Patch the client and launchers using `run-tool client-patcher`
-6. Download the latest cache using `run-tool client-downloader`
+6. Download the latest cache using `run-tool cache-downloader`
 7. Wait until this framework progresses further
