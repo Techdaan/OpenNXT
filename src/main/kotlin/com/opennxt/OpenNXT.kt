@@ -13,6 +13,7 @@ import com.opennxt.filesystem.prefetches.PrefetchTable
 import com.opennxt.filesystem.sqlite.SqliteFilesystem
 import com.opennxt.login.LoginThread
 import com.opennxt.net.RSChannelInitializer
+import com.opennxt.net.game.ProtocolInformation
 import com.opennxt.net.http.HttpServer
 import com.opennxt.net.proxy.ProxyConnectionFactory
 import io.netty.bootstrap.ServerBootstrap
@@ -21,6 +22,8 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import mu.KotlinLogging
 import java.io.FileNotFoundException
+import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT server)") {
@@ -41,6 +44,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
     lateinit var filesystem: Filesystem
     lateinit var proxyConnectionFactory: ProxyConnectionFactory
+    lateinit var protocol: ProtocolInformation
 
     private val bootstrap = ServerBootstrap()
 
@@ -72,6 +76,17 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
             logger.info { "Setting up proxy connection factory" }
             proxyConnectionFactory = ProxyConnectionFactory()
         }
+
+        val protPath = Constants.PROT_PATH.resolve(config.build.toString())
+        if (!Files.exists(protPath)) {
+            logger.error { "Protocol information not found for build ${config.build}." }
+            logger.error { " Looked in: $protPath" }
+            logger.error { " Please look check out the following wiki page for help: <TO-DO>" }
+            exitProcess(1)
+        }
+
+        protocol = ProtocolInformation(protPath)
+        protocol.load()
 
         logger.info { "Setting up HTTP server" }
         http = HttpServer(config)

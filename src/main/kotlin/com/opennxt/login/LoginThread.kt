@@ -27,9 +27,13 @@ object LoginThread : Thread("login-thread") {
     }
 
     private fun process(context: LoginContext) {
-        OpenNXT.proxyConnectionFactory.createLogin(context.packet) {
-            logger.info { "Create login returned $it" }
-            context.callback(it)
+        if (OpenNXT.enableProxySupport) {
+            OpenNXT.proxyConnectionFactory.createLogin(context.packet) {
+                logger.info { "Create login returned $it" }
+                context.callback(it)
+            }
+        } else {
+            context.callback(LoginResult.SUCCESS)
         }
     }
 

@@ -6,6 +6,7 @@ import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import mu.KotlinLogging
+import kotlin.system.exitProcess
 
 class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
     private val logger = KotlinLogging.logger { }
@@ -15,17 +16,14 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
 
         if (msg is LoginPacket.LobbyLoginRequest)
             LoginThread.login(msg) {
-                logger.info { "Login state: $it" }
-
-                val future = ctx.channel()
-                    .writeAndFlush(LoginPacket.LoginResponse(it.code))
+                val future = ctx.channel().writeAndFlush(LoginPacket.LoginResponse(it.code))
                 if (it.code != GenericResponse.SUCCESSFUL) {
-                    logger.info { "Closing connection" }
                     future.addListener(ChannelFutureListener.CLOSE)
                     return@login
                 }
 
-                // TODO set up channels here
+                logger.info { "TODO SET UP SERVER PROT, TODO SET UP WORLD CONNECTION" }
+                exitProcess(0)
             }
         else throw IllegalStateException("idk how to handle $msg!")
     }

@@ -8,4 +8,5 @@ object Constants {
     val LAUNCHERS_PATH = DATA_PATH.resolve("launchers")
     val CONFIG_PATH = DATA_PATH.resolve("config")
     val CACHE_PATH = DATA_PATH.resolve("cache")
+    val PROT_PATH = DATA_PATH.resolve("prot")
 }
