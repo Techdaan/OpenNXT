@@ -4,6 +4,7 @@ import com.opennxt.Constants
 import com.opennxt.OpenNXT
 import com.opennxt.model.files.FileChecker
 import com.opennxt.net.Side
+import com.opennxt.net.game.clientprot.ClientCheat
 import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.protocol.PacketFieldDeclaration
@@ -107,6 +108,7 @@ object PacketRegistry {
         register(Side.SERVER, "IF_OPENSUB", IfOpenSub::class, IfOpenSub.Codec::class)
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
+        register(Side.CLIENT, "CLIENT_CHEAT", ClientCheat::class, ClientCheat.Codec::class)
     }
 
 
