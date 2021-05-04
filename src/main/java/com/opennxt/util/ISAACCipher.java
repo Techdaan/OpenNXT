@@ -46,6 +46,8 @@ public class ISAACCipher {
 	 */
 	private int c;
 
+	private final Object lock = new Object();
+
 	/**
 	 * Creates the ISAAC cipher. * @param seed The generator seed.
 	 */
@@ -68,6 +70,17 @@ public class ISAACCipher {
 	}
 
 	public int getCurrentValue() {
+		if (count == 0) {
+			ISAACCipher two = new ISAACCipher(new int[]{0, 0, 0,0 });
+			two.count = count;
+			System.arraycopy(results, 0, two.results, 0, SIZE);
+			System.arraycopy(memory, 0, two.memory, 0, SIZE);
+			two.a = a;
+			two.b = b;
+			two.c = c;
+			return two.getNextValue();
+		}
+
 		return results[count - 1];
 	}
 
