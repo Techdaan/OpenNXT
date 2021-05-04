@@ -10,6 +10,8 @@ import com.opennxt.net.game.protocol.PacketFieldDeclaration
 import com.opennxt.net.game.serverprot.NoTimeout
 import com.opennxt.net.game.serverprot.RunClientScript
 import com.opennxt.net.game.serverprot.UpdateStat
+import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
+import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
 import com.opennxt.net.game.serverprot.variables.*
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
@@ -17,27 +19,6 @@ import mu.KotlinLogging
 import java.nio.file.Files
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaType
-
-/*
-    varp_small
-
-  local_res20 = isaac;
-  FUN_00024de0(local_68);
-  l_packet = FUN_00024e60(local_68);
-  l_packet->offset = l_packet->offset + 2;
-  id_hibyte = l_packet->buffer[l_packet->offset + -1];
-  id_lobyte = l_packet->buffer[l_packet->offset + -2];
-  l_packet2 = FUN_00024e50(local_68);
-  l_packet2_offset = l_packet2->offset;
-  l_packet2->offset = l_packet2_offset + 1;
-  value = l_packet2->buffer[l_packet2_offset];
-  puVar1 = jag::game::ConfigProvider::GetVarType
-                     (*(ConfigProvider **)(*(longlong *)(param1 + 8) + 0x4b8),
-                      jag::game::VarDomainType::Player,(uint)CONCAT11(id_hibyte,id_lobyte));
-
-
-
- */
 
 object PacketRegistry {
     private val logger = KotlinLogging.logger { }
@@ -119,6 +100,11 @@ object PacketRegistry {
         register(Side.SERVER, "CLIENT_SETVARC_LARGE", ClientSetvarcLarge::class, ClientSetvarcLarge.Codec::class)
         register(Side.SERVER, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
         register(Side.SERVER, "RUNCLIENTSCRIPT", RunClientScript::class, RunClientScript.Codec)
+        register(Side.SERVER, "CLIENT_SETVARCSTR_SMALL", ClientSetvarcstrSmall::class, ClientSetvarcstrSmall.Codec::class)
+        register(Side.SERVER, "CLIENT_SETVARCSTR_LARGE", ClientSetvarcstrLarge::class, ClientSetvarcstrLarge.Codec::class)
+
+        register(Side.SERVER, "IF_OPENTOP", IfOpenTop::class, IfOpenTop.Codec::class)
+        register(Side.SERVER, "IF_OPENSUB", IfOpenSub::class, IfOpenSub.Codec::class)
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
     }

@@ -1,0 +1,7 @@
+xtea0 int
+xtea1 int
+flag ubytec
+id ushort
+xtea2 int
+parent intv2
+xtea3 int
