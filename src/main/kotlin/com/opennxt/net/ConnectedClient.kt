@@ -18,13 +18,15 @@ class ConnectedClient(val side: Side, val channel: Channel) {
 
     fun receive(pair: OpcodeWithBuffer) {
         try {
-            logger.info { "Received packet [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side" }
-
-            val registration = PacketRegistry.getRegistration(side, pair.opcode) ?: return
+            val registration = PacketRegistry.getRegistration(side, pair.opcode)
+            if (registration == null) {
+                logger.info { "Received packet w/o codec [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side" }
+                return
+            }
 
             val decoded = registration.codec.decode(GamePacketReader(pair.buf))
 
-            logger.info { "Received / decoded packet $decoded [name = ${incomingNames.reversedValues()[pair.opcode]}]" }
+            logger.info { "Received packet [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side: $decoded" }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {

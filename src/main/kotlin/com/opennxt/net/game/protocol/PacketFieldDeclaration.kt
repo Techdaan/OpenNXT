@@ -32,6 +32,11 @@ data class PacketFieldDeclaration(val key: String, val dataCodec: DataCodec<Any>
             codecs["u128byte"] = U128ByteCodec
             codecs["ubytec"] = UByteCCodec
 
+            codecs["sbyte"] = SByteCodec
+            codecs["sbyte128"] = SByte128Codec
+            codecs["s128byte"] = S128ByteCodec
+            codecs["sbytec"] = SByteCCodec
+
             codecs["ushort"] = UShortCodec
             codecs["ushort128"] = UShort128Codec
             codecs["ushortle"] = UShortLECodec
@@ -75,6 +80,35 @@ data class PacketFieldDeclaration(val key: String, val dataCodec: DataCodec<Any>
         object UByteCCodec : DataCodec<Int> {
             override fun read(buffer: GamePacketReader): Int =
                 buffer.getUnsigned(DataType.BYTE, DataTransformation.NEGATE).toInt()
+
+            override fun write(buffer: GamePacketBuilder, value: Int) =
+                buffer.put(DataType.BYTE, DataTransformation.NEGATE, value)
+        }
+
+        object SByteCodec : DataCodec<Int> {
+            override fun read(buffer: GamePacketReader): Int = buffer.getSigned(DataType.BYTE).toInt()
+            override fun write(buffer: GamePacketBuilder, value: Int) = buffer.put(DataType.BYTE, value)
+        }
+
+        object SByte128Codec : DataCodec<Int> {
+            override fun read(buffer: GamePacketReader): Int =
+                buffer.getSigned(DataType.BYTE, DataTransformation.ADD).toInt()
+
+            override fun write(buffer: GamePacketBuilder, value: Int) =
+                buffer.put(DataType.BYTE, DataTransformation.ADD, value)
+        }
+
+        object S128ByteCodec : DataCodec<Int> {
+            override fun read(buffer: GamePacketReader): Int =
+                buffer.getSigned(DataType.BYTE, DataTransformation.SUBTRACT).toInt()
+
+            override fun write(buffer: GamePacketBuilder, value: Int) =
+                buffer.put(DataType.BYTE, DataTransformation.SUBTRACT, value)
+        }
+
+        object SByteCCodec : DataCodec<Int> {
+            override fun read(buffer: GamePacketReader): Int =
+                buffer.getSigned(DataType.BYTE, DataTransformation.NEGATE).toInt()
 
             override fun write(buffer: GamePacketBuilder, value: Int) =
                 buffer.put(DataType.BYTE, DataTransformation.NEGATE, value)

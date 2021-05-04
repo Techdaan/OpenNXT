@@ -8,12 +8,35 @@ import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.protocol.PacketFieldDeclaration
 import com.opennxt.net.game.serverprot.UpdateStat
+import com.opennxt.net.game.serverprot.variables.VarpLarge
+import com.opennxt.net.game.serverprot.variables.VarpSmall
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import mu.KotlinLogging
 import java.nio.file.Files
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaType
+
+/*
+    varp_small
+
+  local_res20 = isaac;
+  FUN_00024de0(local_68);
+  l_packet = FUN_00024e60(local_68);
+  l_packet->offset = l_packet->offset + 2;
+  id_hibyte = l_packet->buffer[l_packet->offset + -1];
+  id_lobyte = l_packet->buffer[l_packet->offset + -2];
+  l_packet2 = FUN_00024e50(local_68);
+  l_packet2_offset = l_packet2->offset;
+  l_packet2->offset = l_packet2_offset + 1;
+  value = l_packet2->buffer[l_packet2_offset];
+  puVar1 = jag::game::ConfigProvider::GetVarType
+                     (*(ConfigProvider **)(*(longlong *)(param1 + 8) + 0x4b8),
+                      jag::game::VarDomainType::Player,(uint)CONCAT11(id_hibyte,id_lobyte));
+
+
+
+ */
 
 object PacketRegistry {
     private val logger = KotlinLogging.logger { }
@@ -88,6 +111,8 @@ object PacketRegistry {
         serverProtByOpcode.clear()
 
         register(Side.SERVER, "UPDATE_STAT", UpdateStat::class, UpdateStat.Codec::class)
+        register(Side.SERVER, "VARP_SMALL", VarpSmall::class, VarpSmall.Codec::class)
+        register(Side.SERVER, "VARP_LARGE", VarpLarge::class, VarpLarge.Codec::class)
     }
 
 
