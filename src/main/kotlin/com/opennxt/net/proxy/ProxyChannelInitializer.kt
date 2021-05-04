@@ -13,8 +13,8 @@ class ProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
 
         ch.pipeline()
             .addLast("login-decoder", LoginClientDecoder())
-            .addLast("login-encoder", LoginEncoder())
             .addLast("login-handler", LoginClientHandler())
+            .addLast("login-encoder", LoginEncoder())
         logger.info { "TODO - Init proxy channel" }
     }
 }

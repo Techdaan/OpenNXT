@@ -19,26 +19,26 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
     override fun channelRead0(ctx: ChannelHandlerContext, msg: LoginPacket) {
         if (msg is LoginPacket.LobbyLoginRequest) {
             ctx.channel().attr(RSChannelAttributes.INCOMING_ISAAC).set(ISAACCipher(msg.header.seeds))
-            ctx.channel().attr(RSChannelAttributes.OUTGOING_ISAAC).set(ISAACCipher(msg.header.seeds.map { it + 50 }.toIntArray()))
+            ctx.channel().attr(RSChannelAttributes.OUTGOING_ISAAC)
+                .set(ISAACCipher(msg.header.seeds.map { it + 50 }.toIntArray()))
 
-            LoginThread.login(msg) {
+            LoginThread.login(msg, ctx.channel()) {
                 val future = ctx.channel().writeAndFlush(Unpooled.buffer(1).writeByte(it.code.id))
                 if (it.code != GenericResponse.SUCCESSFUL) {
                     future.addListener(ChannelFutureListener.CLOSE)
                     return@login
                 }
 
-                ctx.channel().pipeline().remove("login-encoder")
-                ctx.channel().pipeline().remove("login-decoder")
-                ctx.channel().pipeline().remove("login-handler")
+                if (ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get() != null) {
+                    logger.info { "Login was OK for proxy connection [client->open nxt], leaving channel management to proxy..." }
+                } else {
+                    ctx.channel().pipeline().replace("login-decoder", "game-decoder", GamePacketFraming())
+                    ctx.channel().pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())
+                    ctx.channel().pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
 
-                ctx.channel().pipeline().addLast("game-decoder", GamePacketFraming())
-                ctx.channel().pipeline().addLast("game-encoder", GamePacketEncoder())
-                ctx.channel().pipeline().addLast("game-handler", DynamicPacketHandler())
-
-                logger.info { "Login on [SERVER] is completed" }
+                    logger.info { "Login on [SERVER] is completed. Should add this to a map somewhere to handle" }
+                }
             }
-        }
-        else throw IllegalStateException("idk how to handle $msg!")
+        } else throw IllegalStateException("idk how to handle $msg!")
     }
 }

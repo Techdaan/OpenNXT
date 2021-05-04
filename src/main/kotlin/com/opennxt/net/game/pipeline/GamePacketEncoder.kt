@@ -33,28 +33,33 @@ class GamePacketEncoder : MessageToByteEncoder<OpcodeWithBuffer>() {
     }
 
     override fun encode(ctx: ChannelHandlerContext, msg: OpcodeWithBuffer, out: ByteBuf) {
-        if (!inited) init(ctx.channel())
+        try {
+            if (!inited) init(ctx.channel())
 
-        if (!mapping.containsKey(msg.opcode)) {
-            logger.error { "No opcode->size mapping for opcode ${msg.opcode} (side=$side)" }
+            if (!mapping.containsKey(msg.opcode)) {
+                logger.error { "No opcode->size mapping for opcode ${msg.opcode} (side=$side)" }
+                ctx.channel().close()
+                return
+            }
+
+            val buffer = msg.buf
+            val size = mapping[msg.opcode]
+            if (size == -1 && buffer.writerIndex() >= 255)
+                throw IllegalStateException("Var byte packet exceeds 255 bytes: ${msg.opcode} is ${buffer.writerIndex()} bytes")
+            else if (size == -2 && buffer.writerIndex() >= 65535)
+                throw IllegalStateException("Var short packet exceeds 65535 bytes: ${msg.opcode} is ${buffer.writerIndex()} bytes")
+            else if (size >= 0 && size != buffer.writerIndex())
+                throw IllegalStateException("Encoded buffer size does not match expected size (expected: ${size}, got ${buffer.writerIndex()}) opcode ${msg.opcode}")
+
+            out.writeOpcode(isaac, msg.opcode)
+            if (size == -1) out.writeByte(buffer.writerIndex())
+            else if (size == -2) out.writeShort(buffer.writerIndex())
+            out.writeBytes(buffer)
+
+            buffer.release()
+        } catch (e: Exception) {
+            logger.error(e) { "on side $side" }
             ctx.channel().close()
-            return
         }
-
-        val buffer = msg.buf
-        val size = mapping[msg.opcode]
-        if (size == -1 && buffer.writerIndex() >= 255)
-            throw IllegalStateException("Var byte packet exceeds 255 bytes: ${msg.opcode} is ${buffer.writerIndex()} bytes")
-        else if (size == -2 && buffer.writerIndex() >= 65535)
-            throw IllegalStateException("Var short packet exceeds 65535 bytes: ${msg.opcode} is ${buffer.writerIndex()} bytes")
-        else if (size != buffer.writerIndex())
-            throw IllegalStateException("Encoded buffer size does not match expected size (expected: ${size}, got ${buffer.writerIndex()})")
-
-        out.writeOpcode(isaac, msg.opcode)
-        if (size == -1) out.writeByte(buffer.writerIndex())
-        else if (size == -2) out.writeShort(buffer.writerIndex())
-        out.writeBytes(buffer)
-
-        buffer.release()
     }
 }

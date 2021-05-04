@@ -1,8 +1,11 @@
 package com.opennxt.login
 
 import com.opennxt.OpenNXT
+import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.login.LoginPacket
+import com.opennxt.net.proxy.ProxyChannelAttributes
 import com.opennxt.net.proxy.ProxyConnectionFactory
+import io.netty.channel.Channel
 import mu.KotlinLogging
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,16 +31,20 @@ object LoginThread : Thread("login-thread") {
 
     private fun process(context: LoginContext) {
         if (OpenNXT.enableProxySupport) {
-            OpenNXT.proxyConnectionFactory.createLogin(context.packet) {
-                logger.info { "Create login returned $it" }
-                context.callback(it)
+            OpenNXT.proxyConnectionFactory.createLogin(context.packet) { channel, result ->
+                if (channel != null) {
+                    context.channel.attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).set(channel)
+                    channel.attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).set(context.channel)
+                }
+
+                context.callback(result)
             }
         } else {
             context.callback(LoginResult.SUCCESS)
         }
     }
 
-    fun login(packet: LoginPacket, callback: (LoginResult) -> Unit) {
+    fun login(packet: LoginPacket, channel: Channel, callback: (LoginResult) -> Unit) {
         when (packet) {
             is LoginPacket.LobbyLoginRequest -> {
                 queue.add(
@@ -47,6 +54,7 @@ object LoginThread : Thread("login-thread") {
                         packet.build,
                         packet.username,
                         packet.password,
+                        channel = channel
                     )
                 )
             }

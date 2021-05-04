@@ -2,6 +2,7 @@ package com.opennxt.login
 
 import com.opennxt.model.Build
 import com.opennxt.net.login.LoginPacket
+import io.netty.channel.Channel
 import java.util.*
 
 class LoginContext(
@@ -11,5 +12,6 @@ class LoginContext(
     val username: String,
     val password: String,
     var attempt: Int = 0,
-    var uuid: UUID? = null
+    var uuid: UUID? = null,
+    val channel: Channel
 )

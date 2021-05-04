@@ -6,6 +6,7 @@ import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.Side
 import com.opennxt.net.login.LoginPacket
 import io.netty.bootstrap.Bootstrap
+import io.netty.channel.Channel
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioSocketChannel
@@ -23,7 +24,7 @@ class ProxyConnectionFactory {
         bootstrap.handler(ProxyChannelInitializer())
     }
 
-    fun createLogin(packet: LoginPacket, callback: (LoginResult) -> Unit) {
+    fun createLogin(packet: LoginPacket, callback: (Channel?, LoginResult) -> Unit) {
         if (packet !is LoginPacket.LobbyLoginRequest)
             throw NullPointerException("Login should be LobbyLoginRequest or GameLoginRequest!")
 
@@ -31,7 +32,7 @@ class ProxyConnectionFactory {
         bootstrap.connect("lobby18a.runescape.com", 43594).addListener(ChannelFutureListener { listener ->
             if (!listener.isSuccess) {
                 logger.warn(listener.cause()) { "Failed to connect to server" }
-                callback(LoginResult.BANNED)
+                callback(null, LoginResult.BANNED)
                 return@ChannelFutureListener
             }
 

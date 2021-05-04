@@ -14,6 +14,7 @@ enum class LoginResult(val code: GenericResponse) {
     LOCKED(GenericResponse.ACCOUNT_LOCKED),
     BANNED(GenericResponse.TEMPORARILY_BANNED),
     LOGGED_IN(GenericResponse.LOGGED_IN),
+    OUT_OF_DATE(GenericResponse.OUT_OF_DATE),
     ;
 
     companion object {

@@ -1,17 +1,69 @@
 package com.opennxt.net.game.pipeline
 
 import com.opennxt.net.RSChannelAttributes
+import com.opennxt.net.Side
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
+import mu.KotlinLogging
+import java.util.*
 
 class DynamicPacketHandler : SimpleChannelInboundHandler<OpcodeWithBuffer>() {
-    override fun channelRead0(ctx: ChannelHandlerContext, msg: OpcodeWithBuffer) {
-        val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get()
-        if (passthrough != null) {
-            msg.buf.retain() // retain buf so we can pass it on
-            passthrough.write(msg)
-        }
+    private val logger = KotlinLogging.logger { }
 
-        ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get().receive(msg)
+    // Some packets are sent by the other side *before* the other side is ready, this is a hacky workaround to fix this.
+    // Ideally we'd queue packets regardless and send next server tick, but we'll need world ticking for that.
+    //
+    // TODO Resolve this hacky workaround.
+    // TODO IF we do keep this method, we should 100% check queue if we have to write.
+    private val queue = LinkedList<OpcodeWithBuffer>()
+
+    override fun channelRead0(ctx: ChannelHandlerContext, msg: OpcodeWithBuffer) {
+        var written = false
+        val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get()
+        try {
+            val side = ctx.channel().attr(RSChannelAttributes.SIDE).get()
+
+            if (passthrough != null) {
+                msg.buf.retain() // retain buf so we can pass it on
+
+                if (passthrough.pipeline().get("game-encoder") == null) {
+                    // queue until we can send packets
+                    queue += msg
+                } else {
+                    while (queue.isNotEmpty()) {
+                        val next = queue.pollFirst() ?: break
+                        passthrough.write(next).addListener {
+                            if (!it.isSuccess)
+                                logger.error(it.cause()) { "Failed to passthrough packet with opcode ${next.opcode}" }
+                        }
+                    }
+
+                    passthrough.write(msg).addListener {
+                        if (!it.isSuccess)
+                            logger.error(it.cause()) { "Failed to passthrough packet with opcode ${msg.opcode}" }
+                    }
+
+                    written = true
+                }
+            }
+
+            ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get().receive(msg)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            if (written && passthrough != null)
+                passthrough.flush()
+        }
+    }
+
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        logger.error(cause) { "Exception caught in packet handler" }
+    }
+
+    override fun channelInactive(ctx: ChannelHandlerContext) {
+        val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get()
+        if (passthrough != null && passthrough.isOpen) {
+            passthrough.close()
+        }
     }
 }

@@ -1,30 +1,54 @@
 package com.opennxt.util;
 
-/** * @author Graham Edgecombe */
+/**
+ * @author Graham Edgecombe
+ */
 public class ISAACCipher {
-	/** * The golden ratio. */
+	/**
+	 * The golden ratio.
+	 */
 	public static final int RATIO = 0x9e3779b9;
-	/** * The log of the size of the results and memory arrays. */
+	/**
+	 * The log of the size of the results and memory arrays.
+	 */
 	public static final int SIZE_LOG = 8;
-	/** * The size of the results and memory arrays. */
+	/**
+	 * The size of the results and memory arrays.
+	 */
 	public static final int SIZE = 1 << SIZE_LOG;
-	/** * For pseudorandom lookup. */
+	/**
+	 * For pseudorandom lookup.
+	 */
 	public static final int MASK = (SIZE - 1) << 2;
-	/** * The count through the results. */
+	/**
+	 * The count through the results.
+	 */
 	@SuppressWarnings("unused")
 	private int count = 0;
-	/** * The results. */
+	/**
+	 * The results.
+	 */
 	private int results[] = new int[SIZE];
-	/** * The internal memory state. */
+	/**
+	 * The internal memory state.
+	 */
 	private int memory[] = new int[SIZE];
-	/** * The accumulator. */
+	/**
+	 * The accumulator.
+	 */
 	private int a;
-	/** * The last result. */
+	/**
+	 * The last result.
+	 */
 	private int b;
-	/** * The counter. */
+	/**
+	 * The counter.
+	 */
 	private int c;
 
-	/** * Creates the ISAAC cipher. * @param seed The generator seed. */
+	/**
+	 * Creates the ISAAC cipher. * @param seed The generator seed.
+	 */
 	public ISAACCipher(int[] seed) {
 		for (int i = 0; i < seed.length; i++) {
 			results[i] = seed[i];
@@ -32,22 +56,28 @@ public class ISAACCipher {
 		init(true);
 	}
 
-	/** * Gets the next value. * @return The next value. */
+	/**
+	 * Gets the next value. * @return The next value.
+	 */
 	public int getNextValue() {
-		if (count-- == 0) { isaac(); count = SIZE - 1; } return results[count];
-
-//		return 0; // DISABLED
-	}
-
-	public int getCurrentValue() {
+		if (count-- == 0) {
+			isaac();
+			count = SIZE - 1;
+		}
 		return results[count];
 	}
 
-	/** * Generates 256 results. */
+	public int getCurrentValue() {
+		return results[count - 1];
+	}
+
+	/**
+	 * Generates 256 results.
+	 */
 	public void isaac() {
 		int i, j, x, y;
 		b += ++c;
-		for (i = 0, j = SIZE / 2; i < SIZE / 2;) {
+		for (i = 0, j = SIZE / 2; i < SIZE / 2; ) {
 			x = memory[i];
 			a ^= a << 13;
 			a += memory[j++];
@@ -69,7 +99,7 @@ public class ISAACCipher {
 			memory[i] = y = memory[(x & MASK) >> 2] + a + b;
 			results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
 		}
-		for (j = 0; j < SIZE / 2;) {
+		for (j = 0; j < SIZE / 2; ) {
 			x = memory[i];
 			a ^= a << 13;
 			a += memory[j++];

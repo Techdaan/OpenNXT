@@ -1,5 +1,6 @@
 package com.opennxt.net
 
+import com.opennxt.OpenNXT
 import com.opennxt.net.buf.GamePacketBuilder
 import com.opennxt.net.buf.GamePacketReader
 import com.opennxt.net.game.GamePacket
@@ -11,17 +12,21 @@ import io.netty.channel.Channel
 import mu.KotlinLogging
 
 class ConnectedClient(val side: Side, val channel: Channel) {
+    val incomingNames = if (side == Side.CLIENT) OpenNXT.protocol.clientProtNames else OpenNXT.protocol.serverProtNames
 
-    val logger = KotlinLogging.logger {  }
+    val logger = KotlinLogging.logger { }
 
     fun receive(pair: OpcodeWithBuffer) {
         try {
+            logger.info { "Received packet [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side" }
+
             val registration = PacketRegistry.getRegistration(side, pair.opcode) ?: return
 
             val decoded = registration.codec.decode(GamePacketReader(pair.buf))
 
-            logger.info { "Received / decoded packet $decoded" }
-            println("decoded packet $decoded")
+            logger.info { "Received / decoded packet $decoded [name = ${incomingNames.reversedValues()[pair.opcode]}]" }
+        } catch (e: Exception) {
+            e.printStackTrace()
         } finally {
             pair.buf.release()
         }

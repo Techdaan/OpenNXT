@@ -27,8 +27,7 @@ fun ByteBuf.readNullCircumfixedString(): String {
 }
 
 fun ByteBuf.writeNullCircumfixedString(string: String) {
-    if (readUnsignedByte().toInt() != 0)
-        throw IllegalArgumentException("byte != 0 infront of null-circumfixed string")
+    writeByte(0)
     writeString(string)
 }
 
