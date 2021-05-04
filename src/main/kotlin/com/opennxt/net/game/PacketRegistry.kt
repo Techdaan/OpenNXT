@@ -8,6 +8,7 @@ import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.protocol.PacketFieldDeclaration
 import com.opennxt.net.game.serverprot.NoTimeout
+import com.opennxt.net.game.serverprot.RunClientScript
 import com.opennxt.net.game.serverprot.UpdateStat
 import com.opennxt.net.game.serverprot.variables.*
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
@@ -117,6 +118,7 @@ object PacketRegistry {
         register(Side.SERVER, "CLIENT_SETVARC_SMALL", ClientSetvarcSmall::class, ClientSetvarcSmall.Codec::class)
         register(Side.SERVER, "CLIENT_SETVARC_LARGE", ClientSetvarcLarge::class, ClientSetvarcLarge.Codec::class)
         register(Side.SERVER, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
+        register(Side.SERVER, "RUNCLIENTSCRIPT", RunClientScript::class, RunClientScript.Codec)
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
     }
