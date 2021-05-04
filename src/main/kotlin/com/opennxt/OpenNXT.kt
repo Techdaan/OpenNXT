@@ -12,6 +12,9 @@ import com.opennxt.filesystem.Filesystem
 import com.opennxt.filesystem.prefetches.PrefetchTable
 import com.opennxt.filesystem.sqlite.SqliteFilesystem
 import com.opennxt.login.LoginThread
+import com.opennxt.model.lobby.Lobby
+import com.opennxt.model.tick.TickEngine
+import com.opennxt.model.world.World
 import com.opennxt.net.RSChannelInitializer
 import com.opennxt.net.game.protocol.ProtocolInformation
 import com.opennxt.net.http.HttpServer
@@ -44,6 +47,10 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
     lateinit var filesystem: Filesystem
     lateinit var proxyConnectionFactory: ProxyConnectionFactory
     lateinit var protocol: ProtocolInformation
+    lateinit var tickEngine: TickEngine
+
+    lateinit var world: World
+    lateinit var lobby: Lobby
 
     private val bootstrap = ServerBootstrap()
 
@@ -113,6 +120,18 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
         logger.info { "Starting login thread" }
         LoginThread.start()
+
+        logger.info { "Starting tick engine" }
+        tickEngine = TickEngine()
+
+        logger.info { "Instantiating game world" }
+        world = World()
+        tickEngine.submitTickable(world)
+
+        logger.info { "Instantiating lobby" }
+        lobby = Lobby()
+        tickEngine.submitTickable(lobby)
+
 
         logger.info { "Starting network" }
         bootstrap.group(NioEventLoopGroup())
