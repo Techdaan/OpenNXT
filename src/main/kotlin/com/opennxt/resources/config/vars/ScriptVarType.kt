@@ -1,5 +1,6 @@
 package com.opennxt.resources.config.vars
 
+import com.opennxt.model.InterfaceHash
 import com.opennxt.util.TextUtils
 
 enum class ScriptVarType(
@@ -149,6 +150,7 @@ enum class ScriptVarType(
     TYPE_207(207, "TYPE_207", '0', BaseVarType.INTEGER, -1),
     TYPE_208(208, "TYPE_208", '6', BaseVarType.INTEGER, -1),
     ;
+
     companion object {
         private val legacyMappings: Array<ScriptVarType?> = arrayOfNulls(256)
         private val values = values()
@@ -164,6 +166,32 @@ enum class ScriptVarType(
         fun getByChar(c: Char): ScriptVarType {
             if (c == 'O') return OBJ
             return legacyMappings[c.toInt()] ?: throw NullPointerException("No ScriptVarType found for char '$c'")
+        }
+    }
+
+    fun rawToReadable(id: Any): Any {
+        if (id is String && type == BaseVarType.STRING) return id
+        else if (id is String) throw IllegalArgumentException("raw type is string, but base type is $type")
+
+        id as Int
+        return when (this) {
+            COMPONENT -> "[${(id shr 16)}, ${id and 0xffff}]"
+            else -> id
+        }
+    }
+
+    fun readableToRaw(string: String): Any {
+        if (type == BaseVarType.STRING) return string
+
+        return when (this) {
+            COMPONENT -> {
+                if (string.length < 3) return string.toInt()
+                if (string[0] !='[' && string[string.length - 1] != ']') return string.toInt()
+
+                val split = string.substring(1, string.length - 1).split(",")
+                return InterfaceHash(split[0].toInt(), split[1].toInt()).hash
+            }
+            else -> string.toInt()
         }
     }
 
