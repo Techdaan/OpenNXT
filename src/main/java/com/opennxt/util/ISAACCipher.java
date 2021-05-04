@@ -46,8 +46,6 @@ public class ISAACCipher {
 	 */
 	private int c;
 
-	private final Object lock = new Object();
-
 	/**
 	 * Creates the ISAAC cipher. * @param seed The generator seed.
 	 */
