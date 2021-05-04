@@ -7,9 +7,9 @@ import com.opennxt.net.Side
 import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.protocol.PacketFieldDeclaration
+import com.opennxt.net.game.serverprot.NoTimeout
 import com.opennxt.net.game.serverprot.UpdateStat
-import com.opennxt.net.game.serverprot.variables.VarpLarge
-import com.opennxt.net.game.serverprot.variables.VarpSmall
+import com.opennxt.net.game.serverprot.variables.*
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import mu.KotlinLogging
@@ -113,6 +113,12 @@ object PacketRegistry {
         register(Side.SERVER, "UPDATE_STAT", UpdateStat::class, UpdateStat.Codec::class)
         register(Side.SERVER, "VARP_SMALL", VarpSmall::class, VarpSmall.Codec::class)
         register(Side.SERVER, "VARP_LARGE", VarpLarge::class, VarpLarge.Codec::class)
+        register(Side.SERVER, "RESET_CLIENT_VARCACHE", ResetClientVarcache::class, EmptyPacketCodec(ResetClientVarcache))
+        register(Side.SERVER, "CLIENT_SETVARC_SMALL", ClientSetvarcSmall::class, ClientSetvarcSmall.Codec::class)
+        register(Side.SERVER, "CLIENT_SETVARC_LARGE", ClientSetvarcLarge::class, ClientSetvarcLarge.Codec::class)
+        register(Side.SERVER, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
+
+        register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
     }
 
 
