@@ -30,7 +30,7 @@ object LoginThread : Thread("login-thread") {
     }
 
     private fun process(context: LoginContext) {
-        if (OpenNXT.enableProxySupport) {
+        if (OpenNXT.enableProxySupport && OpenNXT.proxyConfig.usernames.contains(context.username.toLowerCase())) {
             OpenNXT.proxyConnectionFactory.createLogin(context.packet) { channel, result ->
                 if (channel != null) {
                     context.channel.attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).set(channel)

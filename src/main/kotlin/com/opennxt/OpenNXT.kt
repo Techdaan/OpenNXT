@@ -18,6 +18,7 @@ import com.opennxt.model.world.World
 import com.opennxt.net.RSChannelInitializer
 import com.opennxt.net.game.protocol.ProtocolInformation
 import com.opennxt.net.http.HttpServer
+import com.opennxt.net.proxy.ProxyConfig
 import com.opennxt.net.proxy.ProxyConnectionFactory
 import com.opennxt.resources.FilesystemResources
 import io.netty.bootstrap.ServerBootstrap
@@ -39,6 +40,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
     lateinit var config: ServerConfig
     lateinit var rsaConfig: RsaConfig
+    lateinit var proxyConfig: ProxyConfig
 
     lateinit var http: HttpServer
 
@@ -66,6 +68,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
             logger.info { "Could not find RSA config: $e. Please run `run-tool rsa-key-generator`" }
             exitProcess(1)
         }
+        proxyConfig = TomlConfig.load(Constants.CONFIG_PATH.resolve("proxy.toml"))
     }
 
     override fun run() {

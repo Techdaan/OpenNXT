@@ -1,9 +1,11 @@
 package com.opennxt.model.lobby
 
+import com.opennxt.OpenNXT
 import com.opennxt.model.tick.Tickable
 import com.opennxt.net.ConnectedClient
 import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
 import com.opennxt.net.game.serverprot.variables.ResetClientVarcache
+import com.opennxt.resources.config.enums.EnumDefinition
 import mu.KotlinLogging
 
 class LobbyPlayer(var client: ConnectedClient) : Tickable {

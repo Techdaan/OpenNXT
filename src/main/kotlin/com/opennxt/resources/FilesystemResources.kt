@@ -36,8 +36,8 @@ class FilesystemResources(val filesystem: Filesystem, val path: Path) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> get(type: KClass<out T>, id: Int): T? {
-        return getFilesystemCodex(type).load(filesystem, id) as? T
+    inline fun <reified T : Any> get(id: Int): T? {
+        return getFilesystemCodex(T::class).load(filesystem, id) as? T
     }
 
     @Suppress("UNCHECKED_CAST")
