@@ -54,5 +54,7 @@ data class RunClientScript(val script: Int, val args: Array<Any>) : GamePacket {
         return result
     }
 
-    override fun toString(): String = "RunClientScript(script=$script, args=${args.contentToString()})"
+    override fun toString(): String = "RunClientScript(script=$script, args=[${
+        args.joinToString(separator = ", ") { if (it is String) "\"$it\"" else it.toString() }
+    }])"
 }
