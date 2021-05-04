@@ -2,19 +2,18 @@ package com.opennxt.net.login
 
 import com.opennxt.config.RsaConfig
 import com.opennxt.ext.decipherXtea
-import com.opennxt.ext.encipherXtea
 import com.opennxt.ext.readBuild
 import com.opennxt.ext.readString
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.login.LoginRSAHeader.Companion.readLoginHeader
 import io.netty.buffer.ByteBuf
-import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
 import mu.KotlinLogging
+import kotlin.system.exitProcess
 
 class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecoder() {
     private val logger = KotlinLogging.logger {  }
@@ -50,7 +49,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                     if (header !is LoginRSAHeader.Fresh) {
                         logger.info { "got reconnecting block in lobby? what?" } // literally impossible but ok.
                         ctx.channel()
-                            .writeAndFlush(LoginPacket.Response(GenericResponse.MALFORMED_PACKET))
+                            .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
                             .addListener(ChannelFutureListener.CLOSE)
                         return
                     }
@@ -67,7 +66,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                     if (header.uniqueId != ctx.channel().attr(RSChannelAttributes.LOGIN_UNIQUE_ID).get()) {
                         logger.error { "Unique id mismatch - possible replay attack?" }
                         ctx.channel()
-                            .writeAndFlush(LoginPacket.Response(GenericResponse.MALFORMED_PACKET))
+                            .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
                             .addListener(ChannelFutureListener.CLOSE)
                     }
 
@@ -75,14 +74,14 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                 }
                 LoginType.GAME -> {
                     ctx.channel()
-                        .writeAndFlush(LoginPacket.Response(GenericResponse.BAD_SESSION))
+                        .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.BAD_SESSION))
                         .addListener(ChannelFutureListener.CLOSE)
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
             ctx.channel()
-                .writeAndFlush(LoginPacket.Response(GenericResponse.MALFORMED_PACKET))
+                .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
                 .addListener(ChannelFutureListener.CLOSE)
         } finally {
             payload.release()

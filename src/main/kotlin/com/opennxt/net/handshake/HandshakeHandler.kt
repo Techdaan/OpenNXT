@@ -40,7 +40,7 @@ class HandshakeHandler : SimpleChannelInboundHandler<HandshakeRequest>() {
                 ctx.pipeline().replace("handshake-handler", "login-handler", LoginServerHandler())
                 ctx.pipeline().replace("handshake-decoder", "login-decoder", LoginServerDecoder(OpenNXT.rsaConfig.login))
 
-                ctx.channel().write(LoginPacket.Response(GenericResponse.SUCCESSFUL_CONNECTION))
+                ctx.channel().write(LoginPacket.LoginResponse(GenericResponse.SUCCESSFUL_CONNECTION))
                 ctx.channel().write(LoginPacket.SendUniqueId(uniqueId))
                 ctx.channel().flush()
             }

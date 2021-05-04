@@ -1,6 +1,8 @@
 package com.opennxt.login
 
 import com.opennxt.net.GenericResponse
+import mu.KotlinLogging
+import java.util.*
 
 enum class LoginResult(val code: GenericResponse) {
     SUCCESS(GenericResponse.SUCCESSFUL),
@@ -11,5 +13,24 @@ enum class LoginResult(val code: GenericResponse) {
     WORLD_FULL(GenericResponse.WORLD_FULL),
     LOCKED(GenericResponse.ACCOUNT_LOCKED),
     BANNED(GenericResponse.TEMPORARILY_BANNED),
-    LOGGED_IN(GenericResponse.LOGGED_IN)
+    LOGGED_IN(GenericResponse.LOGGED_IN),
+    ;
+
+    companion object {
+        private val logger = KotlinLogging.logger {  }
+
+        private val REVERSE_LOOKUP = EnumMap<GenericResponse, LoginResult>(GenericResponse::class.java)
+
+        init {
+            values().forEach { res -> REVERSE_LOOKUP[res.code] = res }
+        }
+
+        fun reverse(response: GenericResponse): LoginResult {
+            val reversed = REVERSE_LOOKUP[response]
+            if (reversed != null)
+                return reversed
+            logger.warn { "Couldn't find GenericResponse->LoginResult mapping for $response, returning LOCKED" }
+            return LOCKED
+        }
+    }
 }

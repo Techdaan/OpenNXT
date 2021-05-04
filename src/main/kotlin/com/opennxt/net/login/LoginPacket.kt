@@ -7,8 +7,8 @@ import com.opennxt.net.OutgoingPacket
 import io.netty.buffer.ByteBuf
 
 sealed class LoginPacket: IncomingPacket, OutgoingPacket {
-    class Response(val code: GenericResponse): LoginPacket()
+    data class SendUniqueId(val id: Long): LoginPacket()
     class LobbyLoginRequest(val build: Build, val header: LoginRSAHeader, val username: String, val password: String, val remaining: ByteBuf): LoginPacket()
 
-    class SendUniqueId(val id: Long): LoginPacket()
+    data class LoginResponse(val code: GenericResponse): LoginPacket()
 }

@@ -14,6 +14,7 @@ import com.opennxt.filesystem.sqlite.SqliteFilesystem
 import com.opennxt.login.LoginThread
 import com.opennxt.net.RSChannelInitializer
 import com.opennxt.net.http.HttpServer
+import com.opennxt.net.proxy.ProxyConnectionFactory
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
@@ -39,6 +40,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
     lateinit var httpChecksumTable: ByteArray
 
     lateinit var filesystem: Filesystem
+    lateinit var proxyConnectionFactory: ProxyConnectionFactory
 
     private val bootstrap = ServerBootstrap()
 
@@ -66,6 +68,9 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
             logger.warn { " Remove flag '--enable-proxy-support'." }
             logger.warn { " to disable." }
             logger.warn { "---------------- WARNING ----------------" }
+
+            logger.info { "Setting up proxy connection factory" }
+            proxyConnectionFactory = ProxyConnectionFactory()
         }
 
         logger.info { "Setting up HTTP server" }

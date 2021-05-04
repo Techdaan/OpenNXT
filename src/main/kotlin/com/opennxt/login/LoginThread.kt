@@ -1,6 +1,8 @@
 package com.opennxt.login
 
+import com.opennxt.OpenNXT
 import com.opennxt.net.login.LoginPacket
+import com.opennxt.net.proxy.ProxyConnectionFactory
 import mu.KotlinLogging
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,7 +27,10 @@ object LoginThread : Thread("login-thread") {
     }
 
     private fun process(context: LoginContext) {
-        context.callback(LoginResult.LOGGED_IN)
+        OpenNXT.proxyConnectionFactory.createLogin(context.packet) {
+            logger.info { "Create login returned $it" }
+            context.callback(it)
+        }
     }
 
     fun login(packet: LoginPacket, callback: (LoginResult) -> Unit) {

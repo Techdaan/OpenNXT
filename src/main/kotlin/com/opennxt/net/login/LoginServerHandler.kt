@@ -18,7 +18,7 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
                 logger.info { "Login state: $it" }
 
                 val future = ctx.channel()
-                    .writeAndFlush(LoginPacket.Response(it.code))
+                    .writeAndFlush(LoginPacket.LoginResponse(it.code))
                 if (it.code != GenericResponse.SUCCESSFUL) {
                     logger.info { "Closing connection" }
                     future.addListener(ChannelFutureListener.CLOSE)

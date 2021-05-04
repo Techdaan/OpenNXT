@@ -2,6 +2,7 @@ package com.opennxt.net.login
 
 import com.opennxt.OpenNXT
 import com.opennxt.ext.readString
+import com.opennxt.ext.writeString
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import java.math.BigInteger
@@ -72,7 +73,53 @@ sealed class LoginRSAHeader(val seeds: IntArray, val uniqueId: Long) {
             exponent: BigInteger,
             modulus: BigInteger
         ) {
-            TODO("Write RSA header")
+            if (type == LoginType.GAME)
+                writeByte(if (header is Reconnecting) 1 else 0)
+
+            val rsaBlock = Unpooled.buffer()
+            rsaBlock.writeByte(10)
+            rsaBlock.writeInt(header.seeds[0])
+            rsaBlock.writeInt(header.seeds[1])
+            rsaBlock.writeInt(header.seeds[2])
+            rsaBlock.writeInt(header.seeds[3])
+            rsaBlock.writeLong(header.uniqueId)
+            if (type == LoginType.GAME && header is Reconnecting) {
+                rsaBlock.writeInt(header.oldSeeds[0])
+                rsaBlock.writeInt(header.oldSeeds[1])
+                rsaBlock.writeInt(header.oldSeeds[2])
+                rsaBlock.writeInt(header.oldSeeds[3])
+
+                val raw = ByteArray(rsaBlock.writerIndex())
+                rsaBlock.readBytes(raw)
+
+                val crypted = BigInteger(raw).modPow(modulus, exponent).toByteArray()
+                writeShort(crypted.size)
+                writeBytes(crypted)
+                return
+            }
+
+            header as Fresh
+            rsaBlock.writeByte(header.weirdThingId)
+            when (header.weirdThingId) {
+                0, 1 -> {
+                    rsaBlock.writeMedium(header.weirdThingValue)
+                    rsaBlock.writeByte(0)
+                }
+                2 -> rsaBlock.writeInt(header.weirdThingValue)
+                3 -> rsaBlock.writeInt(0)
+                else -> throw IllegalStateException("thing id = ${header.weirdThingId}")
+            }
+            rsaBlock.writeBoolean(header.thatBoolean)
+            rsaBlock.writeString(header.password)
+            rsaBlock.writeLong(header.someLong)
+            rsaBlock.writeLong(header.randClient)
+
+            val raw = ByteArray(rsaBlock.writerIndex())
+            rsaBlock.readBytes(raw)
+
+            val crypted = BigInteger(raw).modPow(exponent, modulus).toByteArray()
+            writeShort(crypted.size)
+            writeBytes(crypted)
         }
     }
 }
