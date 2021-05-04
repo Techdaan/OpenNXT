@@ -2,7 +2,8 @@ package com.opennxt.net.js5
 
 import com.opennxt.ext.readBuild
 import com.opennxt.ext.readString
-import com.opennxt.net.buf.BitBuf
+import com.opennxt.net.buf.GamePacketBuilder
+import com.opennxt.net.buf.GamePacketReader
 import com.opennxt.net.js5.packet.Js5Packet
 import com.opennxt.net.js5.packet.Js5PacketCodec
 import io.netty.buffer.ByteBuf
@@ -49,7 +50,7 @@ class Js5Decoder(val session: Js5Session) : ByteToMessageDecoder() {
             Js5PacketCodec.RequestFile.opcodeNxtLow,
             Js5PacketCodec.RequestFile.opcodeNxtHigh1,
             Js5PacketCodec.RequestFile.opcodeNxtHigh2 -> {
-                val request = Js5PacketCodec.RequestFile.decode(BitBuf(buf))
+                val request = Js5PacketCodec.RequestFile.decode(GamePacketReader(buf))
                 request.priority = opcode != Js5PacketCodec.RequestFile.opcodeNxtLow
                 logger.info { "Requested file ${request.index}, ${request.archive}. Priority: ${request.priority}" }
 
@@ -59,31 +60,31 @@ class Js5Decoder(val session: Js5Session) : ByteToMessageDecoder() {
 
             Js5PacketCodec.ConnectionInitialized.opcode -> {
                 logger.info { "Connection initialized" }
-                Js5PacketCodec.ConnectionInitialized.decode(BitBuf(buf))
+                Js5PacketCodec.ConnectionInitialized.decode(GamePacketReader(buf))
                 ctx.channel().attr(Js5Session.ATTR_KEY).get().initialize()
             }
 
             Js5PacketCodec.RequestTermination.opcode -> {
                 logger.info { "Request termination" }
-                Js5PacketCodec.RequestTermination.decode(BitBuf(buf))
+                Js5PacketCodec.RequestTermination.decode(GamePacketReader(buf))
                 ctx.channel().attr(Js5Session.ATTR_KEY).get().close()
             }
 
             Js5PacketCodec.XorRequest.opcode -> {
-                val packet = Js5PacketCodec.XorRequest.decode(BitBuf(buf))
+                val packet = Js5PacketCodec.XorRequest.decode(GamePacketReader(buf))
                 logger.info { "Set XOR: ${packet.xor}" }
                 ctx.channel().attr(Js5Session.XOR_KEY).set(packet.xor)
             }
 
             Js5PacketCodec.LoggedIn.opcode -> {
                 logger.info { "Logged in" }
-                Js5PacketCodec.LoggedIn.decode(BitBuf(buf))
+                Js5PacketCodec.LoggedIn.decode(GamePacketReader(buf))
                 ctx.channel().attr(Js5Session.LOGGED_IN).set(true)
             }
 
             Js5PacketCodec.LoggedOut.opcode -> {
                 logger.info { "Logged out" }
-                Js5PacketCodec.LoggedOut.decode(BitBuf(buf))
+                Js5PacketCodec.LoggedOut.decode(GamePacketReader(buf))
                 ctx.channel().attr(Js5Session.LOGGED_IN).set(true)
             }
 

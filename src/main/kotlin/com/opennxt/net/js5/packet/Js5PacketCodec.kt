@@ -1,20 +1,21 @@
 package com.opennxt.net.js5.packet
 
 import com.opennxt.net.PacketCodec
-import com.opennxt.net.buf.BitBuf
+import com.opennxt.net.buf.GamePacketBuilder
+import com.opennxt.net.buf.GamePacketReader
 
 object Js5PacketCodec {
     object ConnectionInitialized : PacketCodec<Js5Packet.ConnectionInitialized> {
         val opcode = 6
 
-        override fun encode(packet: Js5Packet.ConnectionInitialized, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.ConnectionInitialized, buf: GamePacketBuilder) {
             buf.buffer.writeMedium(packet.value)
             buf.buffer.writeShort(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.ConnectionInitialized {
+        override fun decode(buf: GamePacketReader): Js5Packet.ConnectionInitialized {
             val magic = buf.buffer.readMedium()
             buf.buffer.skipBytes(2)
             val build = buf.buffer.readUnsignedShort()
@@ -26,14 +27,14 @@ object Js5PacketCodec {
     object LoggedIn : PacketCodec<Js5Packet.LoggedIn> {
         val opcode = 2
 
-        override fun encode(packet: Js5Packet.LoggedIn, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.LoggedIn, buf: GamePacketBuilder) {
             buf.buffer.writeMedium(5)
             buf.buffer.writeShort(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.LoggedIn {
+        override fun decode(buf: GamePacketReader): Js5Packet.LoggedIn {
             buf.buffer.skipBytes(5)
             val build = buf.buffer.readUnsignedShort()
             buf.buffer.skipBytes(2)
@@ -44,14 +45,14 @@ object Js5PacketCodec {
     object LoggedOut : PacketCodec<Js5Packet.LoggedOut> {
         val opcode = 3
 
-        override fun encode(packet: Js5Packet.LoggedOut, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.LoggedOut, buf: GamePacketBuilder) {
             buf.buffer.writeMedium(5)
             buf.buffer.writeShort(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.LoggedOut {
+        override fun decode(buf: GamePacketReader): Js5Packet.LoggedOut {
             buf.buffer.skipBytes(5)
             val build = buf.buffer.readUnsignedShort()
             buf.buffer.skipBytes(2)
@@ -62,14 +63,14 @@ object Js5PacketCodec {
     object RequestTermination : PacketCodec<Js5Packet.RequestTermination> {
         val opcode = 7
 
-        override fun encode(packet: Js5Packet.RequestTermination, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.RequestTermination, buf: GamePacketBuilder) {
             buf.buffer.writeByte(0)
             buf.buffer.writeInt(0)
             buf.buffer.writeShort(packet.build)
             buf.buffer.writeShort(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.RequestTermination {
+        override fun decode(buf: GamePacketReader): Js5Packet.RequestTermination {
             buf.buffer.skipBytes(5)
             val build = buf.buffer.readUnsignedShort()
             buf.buffer.skipBytes(2)
@@ -82,7 +83,7 @@ object Js5PacketCodec {
         val opcodeNxtHigh1 = 17
         val opcodeNxtHigh2 = 33
 
-        override fun decode(buf: BitBuf): Js5Packet.RequestFile {
+        override fun decode(buf: GamePacketReader): Js5Packet.RequestFile {
             return Js5Packet.RequestFile(
                 false,
                 buf.buffer.readUnsignedByte().toInt(),
@@ -91,7 +92,7 @@ object Js5PacketCodec {
             )
         }
 
-        override fun encode(packet: Js5Packet.RequestFile, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.RequestFile, buf: GamePacketBuilder) {
             buf.buffer.writeByte(packet.index)
             buf.buffer.writeInt(packet.archive)
             buf.buffer.writeShort(packet.build)
@@ -100,18 +101,18 @@ object Js5PacketCodec {
     }
 
     object Prefetches : PacketCodec<Js5Packet.Prefetches> {
-        override fun encode(packet: Js5Packet.Prefetches, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.Prefetches, buf: GamePacketBuilder) {
             packet.prefetches.forEach { buf.buffer.writeInt(it) }
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.Prefetches {
+        override fun decode(buf: GamePacketReader): Js5Packet.Prefetches {
             val prefetches = IntArray(30) { buf.buffer.readInt() }
             return Js5Packet.Prefetches(prefetches)
         }
     }
 
     object Handshake : PacketCodec<Js5Packet.Handshake> {
-        override fun encode(packet: Js5Packet.Handshake, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.Handshake, buf: GamePacketBuilder) {
             buf.buffer.writeByte(4 + 4 + packet.token.toByteArray(Charsets.US_ASCII).size + 1 + 1)
             buf.buffer.writeInt(packet.major)
             buf.buffer.writeInt(packet.minor)
@@ -120,7 +121,7 @@ object Js5PacketCodec {
             buf.buffer.writeByte(packet.language)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.Handshake {
+        override fun decode(buf: GamePacketReader): Js5Packet.Handshake {
             val size = buf.buffer.readUnsignedByte().toInt()
 
             val tokenArr = ByteArray(size - 10)
@@ -138,13 +139,13 @@ object Js5PacketCodec {
     object XorRequest : PacketCodec<Js5Packet.XorRequest> {
         val opcode = 4
 
-        override fun encode(packet: Js5Packet.XorRequest, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.XorRequest, buf: GamePacketBuilder) {
             buf.buffer.writeByte(packet.xor)
             buf.buffer.writeInt(0) // TODO Figure out which offset is xor
             buf.buffer.writeInt(0)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.XorRequest {
+        override fun decode(buf: GamePacketReader): Js5Packet.XorRequest {
             val xor = buf.buffer.readUnsignedByte().toInt()
             buf.buffer.skipBytes(8)
             return Js5Packet.XorRequest(xor)
@@ -152,11 +153,11 @@ object Js5PacketCodec {
     }
 
     object HandshakeResponse : PacketCodec<Js5Packet.HandshakeResponse> {
-        override fun encode(packet: Js5Packet.HandshakeResponse, buf: BitBuf) {
+        override fun encode(packet: Js5Packet.HandshakeResponse, buf: GamePacketBuilder) {
             buf.buffer.writeByte(packet.code)
         }
 
-        override fun decode(buf: BitBuf): Js5Packet.HandshakeResponse {
+        override fun decode(buf: GamePacketReader): Js5Packet.HandshakeResponse {
             return Js5Packet.HandshakeResponse(buf.buffer.readUnsignedByte().toInt())
         }
     }

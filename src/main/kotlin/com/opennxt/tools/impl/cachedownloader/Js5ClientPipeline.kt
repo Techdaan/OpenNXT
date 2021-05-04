@@ -1,6 +1,7 @@
 package com.opennxt.tools.impl.cachedownloader
 
-import com.opennxt.net.buf.BitBuf
+import com.opennxt.net.buf.GamePacketBuilder
+import com.opennxt.net.buf.GamePacketReader
 import com.opennxt.net.handshake.HandshakeType
 import com.opennxt.net.js5.packet.Js5Packet
 import com.opennxt.net.js5.packet.Js5PacketCodec
@@ -47,13 +48,13 @@ object Js5ClientPipeline {
 
             if (client.state == Js5ClientState.HANDSHAKE) {
                 if (buf.readableBytes() < 1) return
-                out.add(Js5PacketCodec.HandshakeResponse.decode(BitBuf(buf)))
+                out.add(Js5PacketCodec.HandshakeResponse.decode(GamePacketReader(buf)))
                 return
             }
 
             if (client.state == Js5ClientState.PREFETCHES) {
                 if (buf.readableBytes() < 30 * 4) return
-                out.add(Js5PacketCodec.Prefetches.decode(BitBuf(buf)))
+                out.add(Js5PacketCodec.Prefetches.decode(GamePacketReader(buf)))
                 return
             }
 
@@ -126,7 +127,7 @@ object Js5ClientPipeline {
             when (msg) {
                 is Js5Packet.Handshake -> {
                     out.writeByte(HandshakeType.JS_5.id)
-                    Js5PacketCodec.Handshake.encode(msg, BitBuf(out))
+                    Js5PacketCodec.Handshake.encode(msg, GamePacketBuilder(out))
                 }
                 is Js5Packet.RequestFile -> {
                     val opcode = if (msg.nxt) {
@@ -136,19 +137,19 @@ object Js5ClientPipeline {
                     }
 
                     out.writeByte(opcode)
-                    Js5PacketCodec.RequestFile.encode(msg, BitBuf(out))
+                    Js5PacketCodec.RequestFile.encode(msg, GamePacketBuilder(out))
                 }
                 is Js5Packet.ConnectionInitialized -> {
                     out.writeByte(6)
-                    Js5PacketCodec.ConnectionInitialized.encode(msg, BitBuf(out))
+                    Js5PacketCodec.ConnectionInitialized.encode(msg, GamePacketBuilder(out))
                 }
                 is Js5Packet.LoggedIn -> {
                     out.writeByte(2)
-                    Js5PacketCodec.LoggedIn.encode(msg, BitBuf(out))
+                    Js5PacketCodec.LoggedIn.encode(msg, GamePacketBuilder(out))
                 }
                 is Js5Packet.LoggedOut -> {
                     out.writeByte(3)
-                    Js5PacketCodec.LoggedOut.encode(msg, BitBuf(out))
+                    Js5PacketCodec.LoggedOut.encode(msg, GamePacketBuilder(out))
                 }
                 else -> throw RuntimeException("idk what to do: $msg")
             }
