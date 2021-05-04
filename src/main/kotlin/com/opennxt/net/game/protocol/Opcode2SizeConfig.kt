@@ -1,4 +1,4 @@
-package com.opennxt.net.game
+package com.opennxt.net.game.protocol
 
 import com.moandjiezana.toml.Toml
 import com.opennxt.config.TomlConfig

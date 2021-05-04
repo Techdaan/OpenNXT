@@ -17,4 +17,6 @@ object RSChannelAttributes {
 
     val SIDE = AttributeKey.newInstance<Side>("side")
     val PASSTHROUGH_CHANNEL = AttributeKey.newInstance<Channel>("passthrough-channel")
+
+    val CONNECTED_CLIENT = AttributeKey.newInstance<ConnectedClient>("connected-client")
 }

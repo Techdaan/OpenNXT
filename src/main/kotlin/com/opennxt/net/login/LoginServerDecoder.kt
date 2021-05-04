@@ -61,6 +61,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                     payload.readBytes(original)
                     payload.resetReaderIndex()
 
+                    payload.skipBytes(1)
                     val name = payload.readString()
 
                     if (header.uniqueId != ctx.channel().attr(RSChannelAttributes.LOGIN_UNIQUE_ID).get()) {

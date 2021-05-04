@@ -7,6 +7,7 @@ import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.Side
 import com.opennxt.util.ISAACCipher
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
@@ -15,7 +16,7 @@ import mu.KotlinLogging
 
 class GamePacketFraming : ByteToMessageDecoder() {
 
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     private val protocol = OpenNXT.protocol
 
@@ -38,6 +39,7 @@ class GamePacketFraming : ByteToMessageDecoder() {
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
         if (!inited) init(ctx.channel())
+        logger.info { "read on side $side, readable ${buf.readableBytes()}" }
 
         while (buf.isReadable) {
             if (state == State.READ_OPCODE) {
@@ -60,7 +62,7 @@ class GamePacketFraming : ByteToMessageDecoder() {
             if (state == State.READ_SIZE && size < 0) {
                 if (buf.readableBytes() < -size) return
 
-                size = if (size == -1) buf.readUnsignedByte().toInt() else  buf.readUnsignedShort().toInt()
+                size = if (size == -1) buf.readUnsignedByte().toInt() else buf.readUnsignedShort()
 
                 state = State.READ_BODY
             }
@@ -70,6 +72,7 @@ class GamePacketFraming : ByteToMessageDecoder() {
 
                 val payload = buf.readBytes(size)
                 // TODO if proxy and side is client -> dump ?
+                logger.info { "Received side=$side opcode=$opcode size=$size name=${if (side == Side.SERVER) OpenNXT.protocol.serverProtNames.reversedValues()[opcode] ?: "null" else "null"}" }
 
                 out.add(OpcodeWithBuffer(opcode, payload))
 

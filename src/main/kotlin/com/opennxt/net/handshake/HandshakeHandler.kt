@@ -1,8 +1,10 @@
 package com.opennxt.net.handshake
 
 import com.opennxt.OpenNXT
+import com.opennxt.net.ConnectedClient
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.RSChannelAttributes
+import com.opennxt.net.Side
 import com.opennxt.net.js5.Js5Decoder
 import com.opennxt.net.js5.Js5Encoder
 import com.opennxt.net.js5.Js5Handler
@@ -17,9 +19,10 @@ import mu.KotlinLogging
 import java.util.concurrent.ThreadLocalRandom
 
 class HandshakeHandler : SimpleChannelInboundHandler<HandshakeRequest>() {
-    private val logger = KotlinLogging.logger { }
-
     override fun channelRead0(ctx: ChannelHandlerContext, msg: HandshakeRequest) {
+        ctx.channel().attr(RSChannelAttributes.SIDE).set(Side.CLIENT)
+        ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).set(ConnectedClient(Side.CLIENT, ctx.channel()))
+
         when (msg.type) {
             HandshakeType.JS_5 -> {
                 val session = Js5Session(ctx.channel())

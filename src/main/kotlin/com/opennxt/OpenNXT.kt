@@ -13,7 +13,7 @@ import com.opennxt.filesystem.prefetches.PrefetchTable
 import com.opennxt.filesystem.sqlite.SqliteFilesystem
 import com.opennxt.login.LoginThread
 import com.opennxt.net.RSChannelInitializer
-import com.opennxt.net.game.ProtocolInformation
+import com.opennxt.net.game.protocol.ProtocolInformation
 import com.opennxt.net.http.HttpServer
 import com.opennxt.net.proxy.ProxyConnectionFactory
 import io.netty.bootstrap.ServerBootstrap
@@ -23,7 +23,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import mu.KotlinLogging
 import java.io.FileNotFoundException
 import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT server)") {

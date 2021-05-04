@@ -26,6 +26,12 @@ fun ByteBuf.readNullCircumfixedString(): String {
     return readString()
 }
 
+fun ByteBuf.writeNullCircumfixedString(string: String) {
+    if (readUnsignedByte().toInt() != 0)
+        throw IllegalArgumentException("byte != 0 infront of null-circumfixed string")
+    writeString(string)
+}
+
 fun ByteBuf.writeString(string: String) {
     val bytes = string.toByteArray(CHARSET)
     writeBytes(bytes)

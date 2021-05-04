@@ -1,6 +1,9 @@
 package com.opennxt.net.proxy
 
 import com.opennxt.login.LoginResult
+import com.opennxt.net.ConnectedClient
+import com.opennxt.net.RSChannelAttributes
+import com.opennxt.net.Side
 import com.opennxt.net.login.LoginPacket
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.ChannelFutureListener
@@ -33,6 +36,8 @@ class ProxyConnectionFactory {
             }
 
             val ch = listener.channel()
+            ch.attr(RSChannelAttributes.SIDE).set(Side.SERVER)
+            ch.attr(RSChannelAttributes.CONNECTED_CLIENT).set(ConnectedClient(Side.SERVER, ch))
             ch.attr(ProxyChannelAttributes.LOGIN_HANDLER).set(callback)
             ch.attr(ProxyChannelAttributes.USERNAME).set(packet.username)
             ch.attr(ProxyChannelAttributes.PASSWORD).set(packet.password)

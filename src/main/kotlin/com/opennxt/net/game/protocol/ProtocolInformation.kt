@@ -1,7 +1,8 @@
-package com.opennxt.net.game
+package com.opennxt.net.game.protocol
 
 import com.opennxt.OpenNXT
 import com.opennxt.config.TomlConfig
+import com.opennxt.net.game.PacketRegistry
 import mu.KotlinLogging
 import java.nio.file.Files
 import java.nio.file.Path
@@ -68,5 +69,7 @@ class ProtocolInformation(val path: Path) {
 
         if (!Files.exists(path.resolve("serverProt")))
             Files.createDirectories(path.resolve("serverProt"))
+
+        PacketRegistry.reload()
     }
 }
