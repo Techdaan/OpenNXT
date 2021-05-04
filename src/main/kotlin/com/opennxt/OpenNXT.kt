@@ -19,6 +19,7 @@ import com.opennxt.net.RSChannelInitializer
 import com.opennxt.net.game.protocol.ProtocolInformation
 import com.opennxt.net.http.HttpServer
 import com.opennxt.net.proxy.ProxyConnectionFactory
+import com.opennxt.resources.FilesystemResources
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
@@ -40,11 +41,13 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
     lateinit var rsaConfig: RsaConfig
 
     lateinit var http: HttpServer
+
+    lateinit var filesystem: Filesystem
+    lateinit var resources: FilesystemResources
     lateinit var prefetches: PrefetchTable
     lateinit var checksumTable: ByteArray
     lateinit var httpChecksumTable: ByteArray
 
-    lateinit var filesystem: Filesystem
     lateinit var proxyConnectionFactory: ProxyConnectionFactory
     lateinit var protocol: ProtocolInformation
     lateinit var tickEngine: TickEngine
@@ -115,6 +118,9 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
                 .encode(rsaConfig.js5.modulus, rsaConfig.js5.exponent)
         ).array()
 
+        logger.info { "Setting up filesystem resource manager" }
+        resources = FilesystemResources(filesystem, Constants.RESOURCE_PATH)
+
         logger.info { "Starting js5 thread" }
         Js5Thread.start()
 
@@ -131,7 +137,6 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
         logger.info { "Instantiating lobby" }
         lobby = Lobby()
         tickEngine.submitTickable(lobby)
-
 
         logger.info { "Starting network" }
         bootstrap.group(NioEventLoopGroup())
