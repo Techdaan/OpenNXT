@@ -38,5 +38,5 @@ object EnumDiskCodec: DiskResourceCodec<EnumDefinition> {
         TomlWriter().write(data, path.toFile())
     }
 
-    override fun getFileExtension(): String? = "toml"
+    override fun getFileExtension(resource: EnumDefinition): String? = "toml"
 }
