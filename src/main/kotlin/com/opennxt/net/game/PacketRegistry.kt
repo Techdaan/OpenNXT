@@ -1,13 +1,23 @@
 package com.opennxt.net.game
 
+import com.opennxt.Constants
 import com.opennxt.OpenNXT
+import com.opennxt.model.files.FileChecker
 import com.opennxt.net.Side
+import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
+import com.opennxt.net.game.protocol.PacketFieldDeclaration
+import com.opennxt.net.game.serverprot.UpdateStat
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import mu.KotlinLogging
+import java.nio.file.Files
 import kotlin.reflect.KClass
+import kotlin.reflect.jvm.javaType
 
 object PacketRegistry {
+    private val logger = KotlinLogging.logger { }
+
     private val serverProtByOpcode = Int2ObjectOpenHashMap<Registration>()
     private val clientProtByOpcode = Int2ObjectOpenHashMap<Registration>()
 
@@ -21,12 +31,46 @@ object PacketRegistry {
         val codec: GamePacketCodec<*>
     )
 
-    fun <T : GamePacket> register(side: Side, name: String, clazz: KClass<T>, codec: GamePacketCodec<T>) {
+    fun <T : GamePacket> register(
+        side: Side,
+        name: String,
+        clazz: KClass<T>,
+        codecType: KClass<out DynamicGamePacketCodec<T>>
+    ) {
+        val constructor = codecType.constructors
+            .first { it.parameters.size == 1 && it.parameters[0].type.javaType == Array<PacketFieldDeclaration>::class.java }
+
+        val packetPath = Constants.PROT_PATH.resolve(FileChecker.latestBuild().toString())
+            .resolve(if (side == Side.CLIENT) "clientProt" else "serverProt")
+            .resolve("$name.txt")
+
+        if (!Files.exists(packetPath)) {
+            logger.warn { "Failed to load packet field declaration from ${packetPath}" }
+            return
+        }
+
+        val fields =
+            Files.readAllLines(packetPath).filter { it.isNotBlank() }.map { PacketFieldDeclaration.fromString(it) }
+                .toTypedArray()
+
+        val codec = constructor.call(fields)
+
+        register(side, name, clazz, codec)
+    }
+
+    fun <T : GamePacket> register(side: Side, name: String, clazz: KClass<T>, codec: GamePacketCodec<T>?) {
         @Suppress("DEPRECATION")
         val opcode = (if (side == Side.CLIENT) OpenNXT.protocol.clientProtNames else OpenNXT.protocol.serverProtNames)
             .values[name] ?: throw NullPointerException("side $side name $name")
 
+        if (codec == null) {
+            logger.warn { "Skipping registering packet $name on side $side: Codec is null" }
+            return
+        }
+
         val registration = Registration(name, opcode, clazz, codec)
+
+        logger.info { "Registered packet ${clazz.simpleName} on side $side to opcode $opcode with codec ${codec::class.simpleName}" }
 
         if (side == Side.CLIENT) {
             clientProtByClass[clazz] = registration
@@ -43,7 +87,9 @@ object PacketRegistry {
         serverProtByClass.clear()
         serverProtByOpcode.clear()
 
+        register(Side.SERVER, "UPDATE_STAT", UpdateStat::class, UpdateStat.Codec::class)
     }
+
 
     fun getRegistration(side: Side, opcode: Int): Registration? {
         return if (side == Side.CLIENT) {

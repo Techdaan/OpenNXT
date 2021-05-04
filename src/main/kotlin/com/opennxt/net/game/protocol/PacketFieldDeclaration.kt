@@ -3,7 +3,7 @@ package com.opennxt.net.game.protocol
 import com.opennxt.net.buf.*
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 
-data class PacketFieldDeclaration(val key: String, val dataCodec: DataCodec<*>) {
+data class PacketFieldDeclaration(val key: String, val dataCodec: DataCodec<Any>) {
     interface DataCodec<T : Any> {
         fun read(buffer: GamePacketReader): T
         fun write(buffer: GamePacketBuilder, value: T)
@@ -17,7 +17,7 @@ data class PacketFieldDeclaration(val key: String, val dataCodec: DataCodec<*>) 
 
             val codec = Codecs.codecs[parts[1]] ?: throw NullPointerException("Codec not found for type ${parts[1]}")
 
-            return PacketFieldDeclaration(parts[0], codec)
+            return PacketFieldDeclaration(parts[0], codec as DataCodec<Any>)
         }
     }
 

@@ -24,11 +24,11 @@ class DynamicPacketHandler : SimpleChannelInboundHandler<OpcodeWithBuffer>() {
             val side = ctx.channel().attr(RSChannelAttributes.SIDE).get()
 
             if (passthrough != null) {
-                msg.buf.retain() // retain buf so we can pass it on
+                val copy = OpcodeWithBuffer(msg.opcode, msg.buf.copy())
 
                 if (passthrough.pipeline().get("game-encoder") == null) {
                     // queue until we can send packets
-                    queue += msg
+                    queue += copy
                 } else {
                     while (queue.isNotEmpty()) {
                         val next = queue.pollFirst() ?: break
@@ -38,9 +38,9 @@ class DynamicPacketHandler : SimpleChannelInboundHandler<OpcodeWithBuffer>() {
                         }
                     }
 
-                    passthrough.write(msg).addListener {
+                    passthrough.write(copy).addListener {
                         if (!it.isSuccess)
-                            logger.error(it.cause()) { "Failed to passthrough packet with opcode ${msg.opcode}" }
+                            logger.error(it.cause()) { "Failed to passthrough packet with opcode ${copy.opcode}" }
                     }
 
                     written = true
