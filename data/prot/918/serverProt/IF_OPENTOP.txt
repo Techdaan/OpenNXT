@@ -1,6 +1,6 @@
 xtea0 int
 xtea1 int
-xtea3 int
+xtea2 int
 bool ubyte
-xtea4 int
+xtea3 int
 id ushort

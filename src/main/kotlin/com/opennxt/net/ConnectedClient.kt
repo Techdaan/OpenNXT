@@ -10,11 +10,14 @@ import com.opennxt.net.game.pipeline.OpcodeWithBuffer
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import mu.KotlinLogging
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class ConnectedClient(val side: Side, val channel: Channel) {
     val incomingNames = if (side == Side.CLIENT) OpenNXT.protocol.clientProtNames else OpenNXT.protocol.serverProtNames
 
     val logger = KotlinLogging.logger { }
+
+    val incomingQueue = ConcurrentLinkedQueue<GamePacket>()
 
     fun receive(pair: OpcodeWithBuffer) {
         try {
@@ -27,15 +30,13 @@ class ConnectedClient(val side: Side, val channel: Channel) {
             val decoded = registration.codec.decode(GamePacketReader(pair.buf))
 
             logger.info { "Received packet [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side: $decoded" }
+
+            incomingQueue.add(decoded)
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
             pair.buf.release()
         }
-    }
-
-    fun handle() {
-
     }
 
     fun write(pair: OpcodeWithBuffer) {
@@ -44,8 +45,9 @@ class ConnectedClient(val side: Side, val channel: Channel) {
 
     fun write(packet: GamePacket) {
         try {
-            val registration = PacketRegistry.getRegistration(side, packet::class)
-                ?: throw NullPointerException("Registration not found for packet $packet")
+            val registration =
+                PacketRegistry.getRegistration(if (side == Side.CLIENT) Side.SERVER else Side.CLIENT, packet::class)
+                    ?: throw NullPointerException("Registration not found for packet $packet side $side")
 
             val buffer = Unpooled.buffer()
             @Suppress("UNCHECKED_CAST")

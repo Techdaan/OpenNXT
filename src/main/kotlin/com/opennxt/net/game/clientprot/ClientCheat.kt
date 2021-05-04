@@ -7,7 +7,7 @@ import com.opennxt.net.game.protocol.PacketFieldDeclaration
 data class ClientCheat(val forced: Boolean, val tabbed: Boolean, val cheat: String) : GamePacket {
     class Codec(fields: Array<PacketFieldDeclaration>) : DynamicGamePacketCodec<ClientCheat>(fields) {
         override fun fromMap(packet: Map<String, Any>): ClientCheat {
-            return ClientCheat(packet["bool1"] as Int == 1, packet["bool2"] as Int == 1, packet["cheat"] as String)
+            return ClientCheat(packet["forced"] as Int == 1, packet["tabbed"] as Int == 1, packet["cheat"] as String)
         }
 
         override fun toMap(packet: ClientCheat): Map<String, Any> = mapOf(

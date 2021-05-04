@@ -1,6 +1,8 @@
 package com.opennxt.net.login
 
+import com.opennxt.OpenNXT
 import com.opennxt.login.LoginThread
+import com.opennxt.model.lobby.LobbyPlayer
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.game.pipeline.DynamicPacketHandler
@@ -32,9 +34,53 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
                 if (ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get() != null) {
                     logger.info { "Login was OK for proxy connection [client->open nxt], leaving channel management to proxy..." }
                 } else {
-                    ctx.channel().pipeline().replace("login-decoder", "game-decoder", GamePacketFraming())
-                    ctx.channel().pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())
-                    ctx.channel().pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
+                    val response = LoginPacket.LobbyLoginResponse(
+                        byte0 = 0,
+                        rights = 2,
+                        byte2 = 0,
+                        byte3 = 0,
+                        medium4 = 0,
+                        byte5 = 0,
+                        byte6 = 0,
+                        byte7 = 0,
+                        long8 = 0,
+                        int9 = 0,
+                        byte10 = 0,
+                        byte11 = 0,
+                        int12 = 0,
+                        int13 = 0,
+                        short14 = 0,
+                        short15 = 0,
+                        short16 = 0,
+                        ip = 213076433,
+                        byte17 = 0,
+                        short18 = 0,
+                        short19 = 0,
+                        byte20 = 0,
+                        username = it.name,
+                        byte22 = 0,
+                        int23 = 0,
+                        short24 = 0,
+                        defaultWorld = OpenNXT.config.hostname,
+                        defaultWorldPort1 = 43594,
+                        defaultWorldPort2 = 43594,
+                    )
+
+                    ctx.channel().writeAndFlush(response).addListener { future ->
+                        if (!future.isSuccess) {
+                            logger.error(future.cause()) { "Failed to write login response" }
+                            ctx.channel().close()
+                            return@addListener
+                        }
+
+                        ctx.channel().pipeline().replace("login-decoder", "game-decoder", GamePacketFraming())
+                        ctx.channel().pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())
+                        ctx.channel().pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
+
+                        val player = LobbyPlayer(ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get())
+
+                        OpenNXT.lobby.addPlayer(player)
+                    }
 
                     logger.info { "Login on [SERVER] is completed. Should add this to a map somewhere to handle" }
                 }
