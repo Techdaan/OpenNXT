@@ -2,6 +2,10 @@
 
 A RS3 RSPS framework targeted at NXT, the goal is to stay up-to-date with RS3
 
+# Discord
+
+We have a Discord server you can join! https://discord.gg/vFgmFhUt
+
 # Tooling
 
 One of the goals of this project is to have all necessary tools built-in. This includes the client downloader, client
