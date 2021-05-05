@@ -9,14 +9,14 @@ import com.opennxt.net.game.pipeline.GamePacketCodec
 data class RunClientScript(val script: Int, val args: Array<Any>) : GamePacket {
     object Codec : GamePacketCodec<RunClientScript> {
         override fun encode(packet: RunClientScript, buf: GamePacketBuilder) {
-            val desc = packet.args.map { if (it is String) 's' else 'i' }.joinToString()
+            val desc = String(packet.args.map { if (it is String) 's' else 'i' }.toCharArray())
 
             buf.putString(desc)
-            packet.args.forEach {
-                when (it) {
+            for (i in desc.length - 1 downTo 0) {
+                when (val it = packet.args[i]) {
                     is String -> buf.putString(it)
                     is Int -> buf.put(DataType.INT, it)
-                    else -> throw IllegalArgumentException("RUNCLIENTSCRIPT only takes String and Int args")
+                    else -> throw IllegalArgumentException("RUNCLIENTSCRIPT only takes String and Int args, got '$it'")
                 }
             }
             buf.put(DataType.INT, packet.script)
@@ -25,6 +25,7 @@ data class RunClientScript(val script: Int, val args: Array<Any>) : GamePacket {
         override fun decode(buf: GamePacketReader): RunClientScript {
             val desc = buf.getString()
 
+            println(desc)
             val args = arrayOfNulls<Any>(desc.length)
             val chars = desc.toCharArray()
             for (i in desc.length - 1 downTo 0) {
