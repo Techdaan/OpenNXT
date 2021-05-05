@@ -7,13 +7,14 @@ import com.opennxt.net.game.GamePacket
 import com.opennxt.net.game.PacketRegistry
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.pipeline.OpcodeWithBuffer
+import com.opennxt.net.proxy.UnidentifiedPacket
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import mu.KotlinLogging
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class ConnectedClient(val side: Side, val channel: Channel) {
-    val incomingNames = if (side == Side.CLIENT) OpenNXT.protocol.clientProtNames else OpenNXT.protocol.serverProtNames
+class ConnectedClient(val side: Side, val channel: Channel, var processUnidentifiedPackets: Boolean = false) {
+//    val incomingNames = if (side == Side.CLIENT) OpenNXT.protocol.clientProtNames else OpenNXT.protocol.serverProtNames
 
     val logger = KotlinLogging.logger { }
 
@@ -23,13 +24,15 @@ class ConnectedClient(val side: Side, val channel: Channel) {
         try {
             val registration = PacketRegistry.getRegistration(side, pair.opcode)
             if (registration == null) {
-                logger.info { "Received packet w/o codec [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side" }
+//                logger.info { "Received packet w/o codec [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side" }
+                if (processUnidentifiedPackets)
+                    incomingQueue.add(UnidentifiedPacket(OpcodeWithBuffer(pair.opcode, pair.buf.copy())))
                 return
             }
 
             val decoded = registration.codec.decode(GamePacketReader(pair.buf))
 
-            logger.info { "Received packet [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side: $decoded" }
+//            logger.info { "Received packet [opcode=${pair.opcode}, name=${incomingNames.reversedValues()[pair.opcode]}] on side $side: $decoded" }
 
             incomingQueue.add(decoded)
         } catch (e: Exception) {
@@ -44,6 +47,11 @@ class ConnectedClient(val side: Side, val channel: Channel) {
     }
 
     fun write(packet: GamePacket) {
+        if (packet is UnidentifiedPacket) {
+            write(packet.packet)
+            return
+        }
+
         try {
             val registration =
                 PacketRegistry.getRegistration(if (side == Side.CLIENT) Side.SERVER else Side.CLIENT, packet::class)

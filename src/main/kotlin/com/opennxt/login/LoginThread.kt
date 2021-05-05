@@ -3,8 +3,8 @@ package com.opennxt.login
 import com.opennxt.OpenNXT
 import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.login.LoginPacket
+import com.opennxt.net.proxy.ConnectedProxyClient
 import com.opennxt.net.proxy.ProxyChannelAttributes
-import com.opennxt.net.proxy.ProxyConnectionFactory
 import io.netty.channel.Channel
 import mu.KotlinLogging
 import java.util.concurrent.LinkedBlockingQueue
@@ -33,8 +33,22 @@ object LoginThread : Thread("login-thread") {
         if (OpenNXT.enableProxySupport && OpenNXT.proxyConfig.usernames.contains(context.username.toLowerCase())) {
             OpenNXT.proxyConnectionFactory.createLogin(context.packet) { channel, result ->
                 if (channel != null) {
+                    val clientSide = ConnectedProxyClient(context.channel.attr(RSChannelAttributes.CONNECTED_CLIENT).get())
+                    val serverSide = ConnectedProxyClient(channel.attr(RSChannelAttributes.CONNECTED_CLIENT).get())
+
+                    clientSide.connection.processUnidentifiedPackets = true
+                    serverSide.connection.processUnidentifiedPackets = true
+
+                    clientSide.other = serverSide
+                    serverSide.other = clientSide
+
+                    context.channel.attr(ProxyChannelAttributes.PROXY_CLIENT).set(clientSide)
+                    channel.attr(ProxyChannelAttributes.PROXY_CLIENT).set(serverSide)
+
                     context.channel.attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).set(channel)
                     channel.attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).set(context.channel)
+
+                    OpenNXT.proxyConnectionHandler.registerProxyConnection(clientSide, serverSide)
                 }
 
                 context.result = result

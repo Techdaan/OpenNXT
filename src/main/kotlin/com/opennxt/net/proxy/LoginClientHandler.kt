@@ -118,9 +118,11 @@ class LoginClientHandler : SimpleChannelInboundHandler<LoginPacket>() {
                 }
 
                 is LoginPacket.LobbyLoginResponse -> {
+                    logger.info { "proxy client -> game protocol" }
                     ctx.channel().pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
                     ctx.channel().pipeline().replace("login-decoder", "game-decoder", GamePacketFraming())
                     ctx.channel().pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())
+                    ctx.channel().attr(ProxyChannelAttributes.PROXY_CLIENT).get().ready = true
 
                     val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get() ?: return
 
@@ -132,9 +134,11 @@ class LoginClientHandler : SimpleChannelInboundHandler<LoginPacket>() {
                             logger.error(it.cause()) { "???" }
                         }
 
+                        logger.info { "game client -> game protocol" }
                         passthrough.pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
                         passthrough.pipeline().replace("login-decoder", "game-decoder", GamePacketFraming())
                         passthrough.pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())
+                        passthrough.attr(ProxyChannelAttributes.PROXY_CLIENT).get().ready = true
                     }
                 }
 

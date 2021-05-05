@@ -6,6 +6,7 @@ import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.Side
 import com.opennxt.util.ISAACCipher
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufUtil
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToByteEncoder
@@ -51,12 +52,15 @@ class GamePacketEncoder : MessageToByteEncoder<OpcodeWithBuffer>() {
             else if (size >= 0 && size != buffer.writerIndex())
                 throw IllegalStateException("Encoded buffer size does not match expected size (expected: ${size}, got ${buffer.writerIndex()}) opcode ${msg.opcode}")
 
-            out.writeOpcode(isaac, msg.opcode)
-            if (size == -1) out.writeByte(buffer.writerIndex())
-            else if (size == -2) out.writeShort(buffer.writerIndex())
-            out.writeBytes(buffer)
+//            logger.info { "[SEND] ${side}: ${msg.opcode} (real size=${buffer.readableBytes()}, readable=${buffer.readableBytes()}, ${buffer.readerIndex()}). Dump:\n${ByteBufUtil.prettyHexDump(buffer)}\nreadable after: ${buffer.readableBytes()}, ${buffer.readerIndex()}" }
+            synchronized(isaac) {
+                out.writeOpcode(isaac, msg.opcode)
+                if (size == -1) out.writeByte(buffer.writerIndex())
+                else if (size == -2) out.writeShort(buffer.writerIndex())
+                out.writeBytes(buffer)
 
-            buffer.release()
+                buffer.release()
+            }
         } catch (e: Exception) {
             logger.error(e) { "on side $side" }
             ctx.channel().close()

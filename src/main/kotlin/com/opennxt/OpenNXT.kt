@@ -20,6 +20,7 @@ import com.opennxt.net.game.protocol.ProtocolInformation
 import com.opennxt.net.http.HttpServer
 import com.opennxt.net.proxy.ProxyConfig
 import com.opennxt.net.proxy.ProxyConnectionFactory
+import com.opennxt.net.proxy.ProxyConnectionHandler
 import com.opennxt.resources.FilesystemResources
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
@@ -51,6 +52,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
     lateinit var httpChecksumTable: ByteArray
 
     lateinit var proxyConnectionFactory: ProxyConnectionFactory
+    lateinit var proxyConnectionHandler: ProxyConnectionHandler
     lateinit var protocol: ProtocolInformation
     lateinit var tickEngine: TickEngine
 
@@ -87,6 +89,7 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
             logger.info { "Setting up proxy connection factory" }
             proxyConnectionFactory = ProxyConnectionFactory()
+            proxyConnectionHandler = ProxyConnectionHandler()
         }
 
         val protPath = Constants.PROT_PATH.resolve(config.build.toString())
@@ -140,6 +143,11 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
         logger.info { "Instantiating lobby" }
         lobby = Lobby()
         tickEngine.submitTickable(lobby)
+
+        if (enableProxySupport) {
+            logger.info { "Registering proxy connection handler to tick engine" }
+            tickEngine.submitTickable(proxyConnectionHandler)
+        }
 
         logger.info { "Starting network" }
         bootstrap.group(NioEventLoopGroup())

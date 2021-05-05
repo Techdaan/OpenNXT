@@ -18,41 +18,42 @@ class DynamicPacketHandler : SimpleChannelInboundHandler<OpcodeWithBuffer>() {
     private val queue = LinkedList<OpcodeWithBuffer>()
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: OpcodeWithBuffer) {
-        var written = false
-        val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get()
+//        var written = false
+//        val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get()
         try {
-            val side = ctx.channel().attr(RSChannelAttributes.SIDE).get()
-
-            if (passthrough != null) {
-                val copy = OpcodeWithBuffer(msg.opcode, msg.buf.copy())
-
-                if (passthrough.pipeline().get("game-encoder") == null) {
-                    // queue until we can send packets
-                    queue += copy
-                } else {
-                    while (queue.isNotEmpty()) {
-                        val next = queue.pollFirst() ?: break
-                        passthrough.write(next).addListener {
-                            if (!it.isSuccess)
-                                logger.error(it.cause()) { "Failed to passthrough packet with opcode ${next.opcode}" }
-                        }
-                    }
-
-                    passthrough.write(copy).addListener {
-                        if (!it.isSuccess)
-                            logger.error(it.cause()) { "Failed to passthrough packet with opcode ${copy.opcode}" }
-                    }
-
-                    written = true
-                }
-            }
+//            val side = ctx.channel().attr(RSChannelAttributes.SIDE).get()
+//            logger.info { "channel read0 $side: $msg" }
+//
+//            if (passthrough != null) {
+//                val copy = OpcodeWithBuffer(msg.opcode, msg.buf.copy())
+//
+//                if (passthrough.pipeline().get("game-encoder") == null) {
+//                    // queue until we can send packets
+//                    queue += copy
+//                } else {
+//                    while (queue.isNotEmpty()) {
+//                        val next = queue.pollFirst() ?: break
+//                        passthrough.write(next).addListener {
+//                            if (!it.isSuccess)
+//                                logger.error(it.cause()) { "Failed to passthrough packet with opcode ${next.opcode}" }
+//                        }
+//                    }
+//
+//                    passthrough.write(copy).addListener {
+//                        if (!it.isSuccess)
+//                            logger.error(it.cause()) { "Failed to passthrough packet with opcode ${copy.opcode}" }
+//                    }
+//
+//                    written = true
+//                }
+//            }
 
             ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get().receive(msg)
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            if (written && passthrough != null)
-                passthrough.flush()
+//            if (written && passthrough != null)
+//                passthrough.flush()
         }
     }
 
