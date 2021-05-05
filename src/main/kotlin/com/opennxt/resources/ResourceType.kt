@@ -1,10 +1,14 @@
 package com.opennxt.resources
 
 import com.opennxt.resources.config.enums.EnumDefinition
+import com.opennxt.resources.config.params.ParamDefinition
+import com.opennxt.resources.config.structs.StructDefinition
 import kotlin.reflect.KClass
 
 enum class ResourceType(val identifier: String, val kclass: KClass<*>) {
-    ENUM("enum", EnumDefinition::class)
+    ENUM("enum", EnumDefinition::class),
+    PARAM("param", ParamDefinition::class),
+    STRUCT("struct", StructDefinition::class),
     ;
 
     companion object {

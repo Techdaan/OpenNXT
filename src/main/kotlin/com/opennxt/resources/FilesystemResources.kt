@@ -3,22 +3,36 @@ package com.opennxt.resources
 import com.opennxt.filesystem.Filesystem
 import com.opennxt.resources.config.enums.EnumFilesystemCodec
 import com.opennxt.resources.config.enums.EnumDiskCodec
+import com.opennxt.resources.config.params.ParamDiskCodec
+import com.opennxt.resources.config.params.ParamFilesystemCodec
+import com.opennxt.resources.config.structs.StructDiskCodec
+import com.opennxt.resources.config.structs.StructFilesystemCodec
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 import kotlin.reflect.KClass
 
 class FilesystemResources(val filesystem: Filesystem, val path: Path) {
+    companion object {
+        lateinit var instance: FilesystemResources
+    }
+
     private val fsCodices = EnumMap<ResourceType, FilesystemResourceCodec<*>>(ResourceType::class.java)
     private val diskCodices = EnumMap<ResourceType, DiskResourceCodec<*>>(ResourceType::class.java)
 
     init {
+        instance = this
+
         if (!Files.exists(path))
             Files.createDirectories(path)
 
         fsCodices[ResourceType.ENUM] = EnumFilesystemCodec
+        fsCodices[ResourceType.PARAM] = ParamFilesystemCodec
+        fsCodices[ResourceType.STRUCT] = StructFilesystemCodec
 
         diskCodices[ResourceType.ENUM] = EnumDiskCodec
+        diskCodices[ResourceType.PARAM] = ParamDiskCodec
+        diskCodices[ResourceType.STRUCT] = StructDiskCodec
     }
 
     fun getFilesystemCodex(type: KClass<*>): FilesystemResourceCodec<*> {
