@@ -37,14 +37,16 @@ object LoginThread : Thread("login-thread") {
                     channel.attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).set(context.channel)
                 }
 
-                context.callback(result)
+                context.result = result
+                context.callback(context)
             }
         } else {
-            context.callback(LoginResult.SUCCESS)
+            context.result = LoginResult.SUCCESS
+            context.callback(context)
         }
     }
 
-    fun login(packet: LoginPacket, channel: Channel, callback: (LoginResult) -> Unit) {
+    fun login(packet: LoginPacket, channel: Channel, callback: (LoginContext) -> Unit) {
         when (packet) {
             is LoginPacket.LobbyLoginRequest -> {
                 queue.add(

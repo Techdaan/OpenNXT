@@ -25,8 +25,8 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
                 .set(ISAACCipher(msg.header.seeds.map { it + 50 }.toIntArray()))
 
             LoginThread.login(msg, ctx.channel()) {
-                val future = ctx.channel().writeAndFlush(Unpooled.buffer(1).writeByte(it.code.id))
-                if (it.code != GenericResponse.SUCCESSFUL) {
+                val future = ctx.channel().writeAndFlush(Unpooled.buffer(1).writeByte(it.result.code.id))
+                if (it.result.code != GenericResponse.SUCCESSFUL) {
                     future.addListener(ChannelFutureListener.CLOSE)
                     return@login
                 }
@@ -57,7 +57,7 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
                         short18 = 0,
                         short19 = 0,
                         byte20 = 0,
-                        username = it.name,
+                        username = it.username,
                         byte22 = 0,
                         int23 = 0,
                         short24 = 0,
