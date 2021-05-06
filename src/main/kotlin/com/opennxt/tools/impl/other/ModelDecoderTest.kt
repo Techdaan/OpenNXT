@@ -12,9 +12,10 @@ class ModelDecoderTest : Tool(name = "model-decoder", help = "attempts to decode
         val table = filesystem.getReferenceTable(47)!!
 //        table.archives.forEach { (k, _) ->
 //            if ((k % 500) == 0) println("decoding $k/${table.highestEntry()}")
-            val data = Unpooled.wrappedBuffer(Container.decode(filesystem.read(47, 26)!!).data)
+            val data = Unpooled.wrappedBuffer(Container.decode(filesystem.read(47, 104781)!!).data)
+        println(data.capacity())
 
-            data.readerIndex(3) // TODO Header is un-read?
+        data.readerIndex(3) // TODO Header is un-read?
             val size = data.readUnsignedShortLE()
             val byte_0x5 = data.readUnsignedByte()
             val byte_0x6 = data.readUnsignedByte()
