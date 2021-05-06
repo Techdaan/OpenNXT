@@ -7,12 +7,12 @@ import kotlin.system.exitProcess
 
 class ModelDecoderTest : Tool(name = "model-decoder", help = "attempts to decode models") {
     override fun runTool() {
-        val printValues = false
+        val printValues = true
 
         val table = filesystem.getReferenceTable(47)!!
-        table.archives.forEach { (k, _) ->
-            if ((k % 500) == 0) println("decoding $k/${table.highestEntry()}")
-            val data = Unpooled.wrappedBuffer(Container.decode(filesystem.read(47, k)!!).data)
+//        table.archives.forEach { (k, _) ->
+//            if ((k % 500) == 0) println("decoding $k/${table.highestEntry()}")
+            val data = Unpooled.wrappedBuffer(Container.decode(filesystem.read(47, 26)!!).data)
 
             data.readerIndex(3) // TODO Header is un-read?
             val size = data.readUnsignedShortLE()
@@ -83,20 +83,23 @@ class ModelDecoderTest : Tool(name = "model-decoder", help = "attempts to decode
                     val b = ArrayList<Int>()
                     val c = ArrayList<Int>()
                     for (j in 0 until readsize2) { // TODO Not sure if these are 3 different arrays.
-                        a += data.readUnsignedShortLE()
-                        b += data.readUnsignedShortLE()
-                        c += data.readUnsignedShortLE()
+                        a += data.readShortLE().toInt()
+                        b += data.readShortLE().toInt()
+                        c += data.readShortLE().toInt()
                     }
 
                     if (printValues) println("   a=$a")
                     if (printValues) println("   b=$b")
                     if (printValues) println("   c=$c")
 
-                    val idk = data.readBytes(readsize2 * 3).release()
+                    val mediumValues = IntArray(readsize2) {data.readMediumLE()}
+                    if (printValues) println("\n   ${mediumValues.contentToString()}")
+//                    val idk = data.readBytes(readsize2 * 3).release()
 
-                    val idk2 = data.readBytes(readsize2 * 4).release()
+                    val intValues = IntArray(readsize2) {data.readIntLE()}
+                    if (printValues) println("\n   ${intValues.contentToString()}")
 
-                    val idk3 = IntArray(readsize2 * 2) { data.readUnsignedShortLE() }
+                    val idk3 = IntArray(readsize2) { data.readIntLE() }
                     if (printValues) println("   idk3=${idk3.contentToString()}")
 
                     if ((intmask and 0x8) != 0) {
@@ -152,15 +155,15 @@ class ModelDecoderTest : Tool(name = "model-decoder", help = "attempts to decode
             }
 
             if (data.isReadable) {
-                println("STILL READABLE: ${data.readableBytes()} ON $k")
-                if (k == 104781) {
-                    println("  But it's \"that\" model")
-                } else {
-                    exitProcess(1)
-                }
+                println("STILL READABLE: ${data.readableBytes()}")
+//                if (k == 104781) {
+//                    println("  But it's \"that\" model")
+//                } else {
+//                    exitProcess(1)
+//                }
             }
 
             data.release()
-        }
+//        }
     }
 }
