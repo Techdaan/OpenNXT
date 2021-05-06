@@ -76,13 +76,13 @@ class ModelDecoderTest : Tool(name = "model-decoder", help = "attempts to decode
                     if (printValues) println("   b2_0x0_$j=${values.contentToString()}")
                 }
 
-                val readsize2 = data.readUnsignedShortLE() // line 167
+                val readsize2 = data.readUnsignedShortLE()
                 if (printValues) println("\n  readsize2=$readsize2 (vertices?)")
                 run { // from this shit
                     val a = ArrayList<Int>()
                     val b = ArrayList<Int>()
                     val c = ArrayList<Int>()
-                    for (j in 0 until readsize2) {
+                    for (j in 0 until readsize2) { // TODO Not sure if these are 3 different arrays.
                         a += data.readUnsignedShortLE()
                         b += data.readUnsignedShortLE()
                         c += data.readUnsignedShortLE()
@@ -128,19 +128,19 @@ class ModelDecoderTest : Tool(name = "model-decoder", help = "attempts to decode
             }
 
             for (i in 0 until byte_0x6) {
-                val someShort1 = data.readUnsignedShortLE()//2
-                val someInt2 = data.readIntLE()//6
-                val someInt3 = data.readIntLE()//10
-                val someInt4 = data.readIntLE()//14
-                val someShort5 = data.readUnsignedShortLE()//16
-                val someInt6 = data.readIntLE()//20
-                val someInt7 = data.readIntLE()//24
-                val someInt8 = data.readIntLE()//28
-                val someShort9 = data.readUnsignedShortLE()//32
-                val someInt10 = data.readIntLE()//36
-                val someInt11 = data.readIntLE()//40
-                val someInt12 = data.readIntLE()//40
-                val someShort13 = data.readUnsignedShortLE()//42
+                val someShort1 = data.readUnsignedShortLE()
+                val someInt2 = data.readIntLE()
+                val someInt3 = data.readIntLE()
+                val someInt4 = data.readIntLE()
+                val someShort5 = data.readUnsignedShortLE()
+                val someInt6 = data.readIntLE()
+                val someInt7 = data.readIntLE()
+                val someInt8 = data.readIntLE()
+                val someShort9 = data.readUnsignedShortLE()
+                val someInt10 = data.readIntLE()
+                val someInt11 = data.readIntLE()
+                val someInt12 = data.readIntLE()
+                val someShort13 = data.readUnsignedShortLE()
             }
 
             for (i in 0 until byte_0x7) {
