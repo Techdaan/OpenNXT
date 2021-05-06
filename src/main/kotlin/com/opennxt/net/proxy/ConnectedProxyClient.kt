@@ -2,8 +2,10 @@ package com.opennxt.net.proxy
 
 import com.opennxt.OpenNXT
 import com.opennxt.model.tick.Tickable
+import com.opennxt.model.worldlist.WorldList
 import com.opennxt.net.ConnectedClient
 import com.opennxt.net.Side
+import com.opennxt.net.game.serverprot.WorldListFetchReply
 import io.netty.buffer.ByteBufUtil
 import mu.KotlinLogging
 
@@ -16,6 +18,8 @@ class ConnectedProxyClient(val connection: ConnectedClient) : Tickable {
     var ready = false
 
     lateinit var other: ConnectedProxyClient
+
+    private val worldList = WorldList()
 
     override fun tick() {
         if (!ready || !other.ready) return
@@ -35,6 +39,10 @@ class ConnectedProxyClient(val connection: ConnectedClient) : Tickable {
                 }
             } else {
                 logger.info { "[RECV] ${connection.side}: $packet" }
+            }
+
+            if (packet is WorldListFetchReply) {
+                worldList.handle(packet)
             }
 
             other.connection.write(packet)

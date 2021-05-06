@@ -44,36 +44,50 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
             val build = payload.readBuild()
             val header = payload.readLoginHeader(type,rsaPair.exponent, rsaPair.modulus)
 
+            if (header !is LoginRSAHeader.Fresh && type != LoginType.LOBBY) {
+                logger.info { "got reconnecting block in lobby? what?" } // literally impossible but ok.
+                ctx.channel()
+                    .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
+                    .addListener(ChannelFutureListener.CLOSE)
+                return
+            }
+
+            payload.decipherXtea(header.seeds)
+
+            payload.markReaderIndex()
+            val original = ByteArray(payload.readableBytes())
+            payload.readBytes(original)
+            payload.resetReaderIndex()
+
+            payload.skipBytes(1) // TODO This has to do with name being encoded as long, should prolly check it
+            val name = payload.readString()
+
+            if (header.uniqueId != ctx.channel().attr(RSChannelAttributes.LOGIN_UNIQUE_ID).get()) {
+                logger.error { "Unique id mismatch - possible replay attack?" }
+                ctx.channel()
+                    .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
+                    .addListener(ChannelFutureListener.CLOSE)
+                return
+            }
+
             when (type) {
                 LoginType.LOBBY -> {
+                    header as LoginRSAHeader.Fresh
+
+                    logger.info { "Attempted lobby login: $name, ${header.password}" }
+                    out.add(LoginPacket.LobbyLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
+                }
+                LoginType.GAME -> {
                     if (header !is LoginRSAHeader.Fresh) {
-                        logger.info { "got reconnecting block in lobby? what?" } // literally impossible but ok.
+                        logger.warn { "Client attempted to reconnect, this isn't supported yet!" }
                         ctx.channel()
-                            .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
+                            .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.LOGINSERVER_REJECTED))
                             .addListener(ChannelFutureListener.CLOSE)
                         return
                     }
 
-                    payload.decipherXtea(header.seeds)
+                    logger.info { "Attempted game login: $name, ${header.password}" }
 
-                    payload.markReaderIndex()
-                    val original = ByteArray(payload.readableBytes())
-                    payload.readBytes(original)
-                    payload.resetReaderIndex()
-
-                    payload.skipBytes(1)
-                    val name = payload.readString()
-
-                    if (header.uniqueId != ctx.channel().attr(RSChannelAttributes.LOGIN_UNIQUE_ID).get()) {
-                        logger.error { "Unique id mismatch - possible replay attack?" }
-                        ctx.channel()
-                            .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.MALFORMED_PACKET))
-                            .addListener(ChannelFutureListener.CLOSE)
-                    }
-
-                    out.add(LoginPacket.LobbyLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
-                }
-                LoginType.GAME -> {
                     ctx.channel()
                         .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.BAD_SESSION))
                         .addListener(ChannelFutureListener.CLOSE)

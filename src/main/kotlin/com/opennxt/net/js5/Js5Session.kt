@@ -50,7 +50,6 @@ class Js5Session(val channel: Channel) : AutoCloseable {
         try {
             while (bytesSent < limit && highPriorityRequests.isNotEmpty()) {
                 val request = highPriorityRequests.poll()
-                logger.info { "handing high priority request $request" }
                 val data = request.loadFileData()
                 if (data == null) {
                     logger.warn { "Received file request for non-existing file: [${request.index}, ${request.archive}]" }
@@ -62,7 +61,6 @@ class Js5Session(val channel: Channel) : AutoCloseable {
 
             while (bytesSent < limit && lowPriorityRequests.isNotEmpty()) {
                 val request = lowPriorityRequests.poll()
-                logger.info { "handing low priority request $request" }
                 val data = request.loadFileData()
                 if (data == null) {
                     logger.warn { "Received file request for non-existing file: [${request.index}, ${request.archive}]" }
@@ -73,7 +71,6 @@ class Js5Session(val channel: Channel) : AutoCloseable {
             }
         } finally {
             if (bytesSent != 0) {
-                logger.info { "flush da channel" }
                 channel.flush()
             }
         }

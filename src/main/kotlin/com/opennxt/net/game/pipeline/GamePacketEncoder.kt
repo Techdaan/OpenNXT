@@ -6,7 +6,6 @@ import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.Side
 import com.opennxt.util.ISAACCipher
 import io.netty.buffer.ByteBuf
-import io.netty.buffer.ByteBufUtil
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToByteEncoder

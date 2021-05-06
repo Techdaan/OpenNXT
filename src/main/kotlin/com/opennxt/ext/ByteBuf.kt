@@ -44,7 +44,7 @@ fun ByteBuf.encipherXtea(keys: IntArray, start: Int = readerIndex(), end: Int = 
 
     readerIndex(start)
     val stopAt = (end - start) / 8
-    for(i in 0 until stopAt) {
+    for (i in 0 until stopAt) {
         var int1 = readInt()
         var int2 = readInt()
 
@@ -138,10 +138,18 @@ fun ByteBuf.writeOpcode(isaac: ISAACCipher, opcode: Int) {
     writeByte(opcode + isaac.nextValue)
 }
 
-fun ByteBuf.readSmartShort(): Int{
+fun ByteBuf.readSmartShort(): Int {
     val n = getByte(readerIndex()).toInt() and 0xff
     if (n < 128) return readUnsignedByte().toInt()
     return readUnsignedShort() - 32768
+}
+
+fun ByteBuf.writeSmartShort(value: Int) {
+    when (value) {
+        in 0..127 -> writeByte(value)
+        in 0..32767 -> writeShort(value + 32768)
+        else -> throw IllegalArgumentException("Value cannot be greater than 32767")
+    }
 }
 
 fun ByteBuf.readSmartInt(): Int {

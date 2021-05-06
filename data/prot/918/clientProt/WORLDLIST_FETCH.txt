@@ -1,0 +1,1 @@
+checksum int # Realistically the data type doesn't matter

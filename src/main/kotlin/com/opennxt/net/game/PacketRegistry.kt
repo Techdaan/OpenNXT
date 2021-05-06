@@ -5,12 +5,11 @@ import com.opennxt.OpenNXT
 import com.opennxt.model.files.FileChecker
 import com.opennxt.net.Side
 import com.opennxt.net.game.clientprot.ClientCheat
+import com.opennxt.net.game.clientprot.WorldlistFetch
 import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.protocol.PacketFieldDeclaration
-import com.opennxt.net.game.serverprot.NoTimeout
-import com.opennxt.net.game.serverprot.RunClientScript
-import com.opennxt.net.game.serverprot.UpdateStat
+import com.opennxt.net.game.serverprot.*
 import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
 import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
 import com.opennxt.net.game.serverprot.variables.*
@@ -103,12 +102,15 @@ object PacketRegistry {
         register(Side.SERVER, "RUNCLIENTSCRIPT", RunClientScript::class, RunClientScript.Codec)
         register(Side.SERVER, "CLIENT_SETVARCSTR_SMALL", ClientSetvarcstrSmall::class, ClientSetvarcstrSmall.Codec::class)
         register(Side.SERVER, "CLIENT_SETVARCSTR_LARGE", ClientSetvarcstrLarge::class, ClientSetvarcstrLarge.Codec::class)
-
+        register(Side.SERVER, "WORLDLIST_FETCH_REPLY", WorldListFetchReply::class, WorldListFetchReply.Codec)
         register(Side.SERVER, "IF_OPENTOP", IfOpenTop::class, IfOpenTop.Codec::class)
         register(Side.SERVER, "IF_OPENSUB", IfOpenSub::class, IfOpenSub.Codec::class)
+        register(Side.SERVER, "CHAT_FILTER_SETTINGS_PRIVATECHAT", ChatFilterSettingsPrivatechat::class, ChatFilterSettingsPrivatechat.Codec::class)
+        register(Side.SERVER, "FRIENDLIST_LOADED", FriendlistLoaded::class, EmptyPacketCodec(FriendlistLoaded))
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
         register(Side.CLIENT, "CLIENT_CHEAT", ClientCheat::class, ClientCheat.Codec::class)
+        register(Side.CLIENT, "WORLDLIST_FETCH", WorldlistFetch::class, WorldlistFetch.Codec::class)
     }
 
 
