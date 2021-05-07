@@ -1,9 +1,6 @@
 package com.opennxt.net.login
 
-import com.opennxt.ext.decipherXtea
-import com.opennxt.ext.readBuild
-import com.opennxt.ext.readString
-import com.opennxt.ext.writeNullCircumfixedString
+import com.opennxt.ext.*
 import com.opennxt.net.login.LoginRSAHeader.Companion.writeLoginHeader
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -46,6 +43,25 @@ class LoginEncoder: MessageToByteEncoder<LoginPacket>() {
 
                 out.writeBytes(tmp)
             }
+            is LoginPacket.GameLoginRequest -> {
+                val tmp = Unpooled.buffer()
+
+                tmp.writeByte(LoginType.GAME.id)
+
+                val wrapper = Unpooled.buffer()
+                wrapper.writeInt(msg.build.major)
+                wrapper.writeInt(msg.build.minor)
+
+                val header = msg.header as LoginRSAHeader.Fresh
+
+                wrapper.writeLoginHeader(LoginType.GAME, header, RS3_EXPONENT, RS3_MODULUS)
+                msg.remaining.readerIndex(0)
+                wrapper.writeBytes(msg.remaining)
+                tmp.writeShort(wrapper.writerIndex())
+                tmp.writeBytes(wrapper)
+
+                out.writeBytes(tmp)
+            }
             is LoginPacket.LobbyLoginResponse -> {
                 val tmp = Unpooled.buffer()
                 tmp.writeByte(msg.byte0)
@@ -80,40 +96,40 @@ class LoginEncoder: MessageToByteEncoder<LoginPacket>() {
 
                 out.writeByte(tmp.writerIndex())
                 out.writeBytes(tmp)
-                logger.info { "Encoded login response" }
-/*
-                    LoginPacket.LobbyLoginResponse(
-                        byte0 = payload.readUnsignedByte().toInt(),
-                        rights = payload.readUnsignedByte().toInt(),
-                        byte2 = payload.readUnsignedByte().toInt(),
-                        byte3 = payload.readUnsignedByte().toInt(),
-                        medium4 = payload.readUnsignedMedium(),
-                        byte5 = payload.readUnsignedByte().toInt(),
-                        byte6 = payload.readUnsignedByte().toInt(),
-                        byte7 = payload.readUnsignedByte().toInt(),
-                        long8 = payload.readLong(),
-                        int9 = payload.readInt(),
-                        byte10 = payload.readUnsignedByte().toInt(),
-                        byte11 = payload.readUnsignedByte().toInt(),
-                        int12 = payload.readInt(),
-                        int13 = payload.readInt(),
-                        short14 = payload.readUnsignedShort(),
-                        short15 = payload.readUnsignedShort(),
-                        short16 = payload.readUnsignedShort(),
-                        ip = payload.readInt(),
-                        byte17 = payload.readUnsignedByte().toInt(),
-                        short18 = payload.readUnsignedShort(),
-                        short19 = payload.readUnsignedShort(),
-                        byte20 = payload.readUnsignedByte().toInt(),
-                        username = payload.readNullCircumfixedString(),
-                        byte22 = payload.readUnsignedByte().toInt(),
-                        int23 = payload.readInt(),
-                        short24 = payload.readUnsignedShort(),
-                        defaultWorld = payload.readNullCircumfixedString(),
-                        defaultWorldPort1 = payload.readUnsignedShort(),
-                        defaultWorldPort2 = payload.readUnsignedShort()
-                    )
- */
+                tmp.release()
+            }
+            is LoginPacket.GameLoginResponse -> {
+                val tmp = Unpooled.buffer()
+                tmp.writeByte(msg.byte0)
+                tmp.writeByte(msg.rights)
+                tmp.writeByte(msg.byte2)
+                tmp.writeByte(msg.byte3)
+                tmp.writeByte(msg.byte4)
+                tmp.writeByte(msg.byte5)
+//                tmp.writeByte(msg.byte6)
+                tmp.writeShort(msg.playerIndex)
+                tmp.writeByte(msg.byte8)
+                tmp.writeMedium(msg.medium9)
+                tmp.writeByte(msg.isMember)
+                tmp.writeNullCircumfixedString(msg.username)
+                tmp.writeShort(msg.short12)
+                tmp.writeInt(msg.int13)
+
+                out.writeByte(tmp.writerIndex())
+                out.writeBytes(tmp)
+                tmp.release()
+            }
+            is LoginPacket.ServerpermVarcChunk -> {
+                val tmp = Unpooled.buffer()
+                tmp.writeByte(if(msg.finished) 1 else 0)
+                msg.varcs.forEach { (k, v) ->
+                    tmp.writeShort(k)
+                    tmp.writeInt(v as Int)
+                }
+
+                out.writeShort(tmp.writerIndex())
+                out.writeBytes(tmp)
+                tmp.release()
             }
             else -> {
                 // exceptions didn't get logged to console, need to figure out why netty can be weird.

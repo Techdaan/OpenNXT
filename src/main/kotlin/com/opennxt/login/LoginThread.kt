@@ -74,6 +74,18 @@ object LoginThread : Thread("login-thread") {
                     )
                 )
             }
+            is LoginPacket.GameLoginRequest -> {
+                queue.add(
+                    LoginContext(
+                        packet,
+                        callback,
+                        packet.build,
+                        packet.username,
+                        packet.password,
+                        channel = channel
+                    )
+                )
+            }
             else -> throw IllegalArgumentException("expected LobbyLoginRequest or GameLoginRequest, got $packet")
         }
     }

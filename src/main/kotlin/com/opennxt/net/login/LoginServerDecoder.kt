@@ -19,7 +19,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
     private val logger = KotlinLogging.logger {  }
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
-        if (buf.readableBytes() < 3) return
+        logger.info { "readable = ${buf.readableBytes()}" }
         buf.markReaderIndex()
 
         val id = buf.readUnsignedByte().toInt()
@@ -31,13 +31,33 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
             return
         }
 
-        ctx.channel().attr(RSChannelAttributes.LOGIN_TYPE).set(type)
+        // TODO Move this to another decoder or something, this should *probably* not be here.
+        if (type == LoginType.GAMELOGIN_CONTINUE) {
+            if (ctx.channel().attr(RSChannelAttributes.LOGIN_TYPE).get() == null) {
+                logger.error { "GAMELOGIN_CONTINUE sent from client that is not in login state" }
+                buf.skipBytes(buf.readableBytes())
+                ctx.channel().close()
+                return
+            }
+
+            logger.info { "TODO: Send game login response" }
+
+            // TODO Send login response here? Why are we doing this here...
+            return
+        }
+
+        if (buf.readableBytes() < 2){
+            buf.resetReaderIndex()
+            return
+        }
 
         val length = buf.readUnsignedShort()
         if (buf.readableBytes() < length) {
             buf.resetReaderIndex()
             return
         }
+
+        ctx.channel().attr(RSChannelAttributes.LOGIN_TYPE).set(type)
 
         val payload = buf.readBytes(length)
         try {
@@ -74,7 +94,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                 LoginType.LOBBY -> {
                     header as LoginRSAHeader.Fresh
 
-                    logger.info { "Attempted lobby login: $name, ${header.password}" }
+                    logger.info { "Attempted lobby login: $name, *****" }
                     out.add(LoginPacket.LobbyLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
                 }
                 LoginType.GAME -> {
@@ -86,11 +106,8 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                         return
                     }
 
-                    logger.info { "Attempted game login: $name, ${header.password}" }
-
-                    ctx.channel()
-                        .writeAndFlush(LoginPacket.LoginResponse(GenericResponse.BAD_SESSION))
-                        .addListener(ChannelFutureListener.CLOSE)
+                    logger.info { "Attempted game login: $name, *****" }
+                    out.add(LoginPacket.GameLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
                 }
             }
         } catch (e: Exception) {

@@ -62,6 +62,7 @@ class DynamicPacketHandler : SimpleChannelInboundHandler<OpcodeWithBuffer>() {
     }
 
     override fun channelInactive(ctx: ChannelHandlerContext) {
+        logger.info { "Channel on side ${ctx.channel().attr(RSChannelAttributes.SIDE).get()} went inactive" }
         val passthrough = ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get()
         if (passthrough != null && passthrough.isOpen) {
             passthrough.close()

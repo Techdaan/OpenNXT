@@ -12,7 +12,6 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioSocketChannel
 import mu.KotlinLogging
 
-// lobby18a.runescape.com:43594
 class ProxyConnectionFactory {
     private val logger = KotlinLogging.logger { }
     private val bootstrap = Bootstrap()
@@ -25,11 +24,12 @@ class ProxyConnectionFactory {
     }
 
     fun createLogin(packet: LoginPacket, callback: (Channel?, LoginResult) -> Unit) {
-        if (packet !is LoginPacket.LobbyLoginRequest)
+        if (packet !is LoginPacket.LobbyLoginRequest && packet !is LoginPacket.GameLoginRequest)
             throw NullPointerException("Login should be LobbyLoginRequest or GameLoginRequest!")
 
-        // TODO Change IP based on lobby or game
-        bootstrap.connect("lobby18a.runescape.com", 43594).addListener(ChannelFutureListener { listener ->
+        val host = if (packet is LoginPacket.LobbyLoginRequest) "lobby18a.runescape.com" else "world3.runescape.com"
+
+        bootstrap.connect(host, 43594).addListener(ChannelFutureListener { listener ->
             if (!listener.isSuccess) {
                 logger.warn(listener.cause()) { "Failed to connect to server" }
                 callback(null, LoginResult.BANNED)
@@ -40,8 +40,10 @@ class ProxyConnectionFactory {
             ch.attr(RSChannelAttributes.SIDE).set(Side.SERVER)
             ch.attr(RSChannelAttributes.CONNECTED_CLIENT).set(ConnectedClient(Side.SERVER, ch))
             ch.attr(ProxyChannelAttributes.LOGIN_HANDLER).set(callback)
-            ch.attr(ProxyChannelAttributes.USERNAME).set(packet.username)
-            ch.attr(ProxyChannelAttributes.PASSWORD).set(packet.password)
+            ch.attr(ProxyChannelAttributes.USERNAME)
+                .set(if (packet is LoginPacket.LobbyLoginRequest) packet.username else if (packet is LoginPacket.GameLoginRequest) packet.username else throw IllegalStateException())
+            ch.attr(ProxyChannelAttributes.PASSWORD)
+                .set(if (packet is LoginPacket.LobbyLoginRequest) packet.password else if (packet is LoginPacket.GameLoginRequest) packet.password else throw IllegalStateException())
             ch.attr(ProxyChannelAttributes.PACKET).set(packet)
         })
     }

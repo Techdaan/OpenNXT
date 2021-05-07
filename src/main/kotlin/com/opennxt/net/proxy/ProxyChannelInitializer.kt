@@ -15,6 +15,5 @@ class ProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
             .addLast("login-decoder", LoginClientDecoder())
             .addLast("login-handler", LoginClientHandler())
             .addLast("login-encoder", LoginEncoder())
-        logger.info { "TODO - Init proxy channel" }
     }
 }
