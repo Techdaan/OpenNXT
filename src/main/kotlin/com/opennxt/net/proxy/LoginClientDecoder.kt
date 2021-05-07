@@ -4,7 +4,6 @@ import com.opennxt.ext.readNullCircumfixedString
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.login.LoginPacket
 import io.netty.buffer.ByteBuf
-import io.netty.buffer.ByteBufUtil
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
@@ -94,22 +93,6 @@ class LoginClientDecoder : ByteToMessageDecoder() {
                             int13 = payload.readInt()
                         )
                     )
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
-                    logger.info { "READABLE = ${payload.readableBytes()}" }
                 }
             } finally {
                 if (payload.isReadable)

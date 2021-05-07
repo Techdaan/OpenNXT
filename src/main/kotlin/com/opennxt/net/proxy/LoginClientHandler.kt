@@ -210,9 +210,8 @@ class LoginClientHandler : SimpleChannelInboundHandler<LoginPacket>() {
                 }
 
                 is LoginPacket.GameLoginResponse -> {
-                    logger.info { "proxy client -> got response: $msg switching to world" }
+                    logger.info { "proxy client -> got response: $msg; switching to world" }
 
-                    logger.info { "proxy client -> game protocol TO WORLD!" }
                     ctx.channel().pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
                     ctx.channel().pipeline().replace("login-decoder", "game-decoder", GamePacketFraming())
                     ctx.channel().pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())

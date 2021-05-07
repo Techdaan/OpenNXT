@@ -107,6 +107,7 @@ object PacketRegistry {
         register(Side.SERVER, "IF_OPENSUB", IfOpenSub::class, IfOpenSub.Codec::class)
         register(Side.SERVER, "CHAT_FILTER_SETTINGS_PRIVATECHAT", ChatFilterSettingsPrivatechat::class, ChatFilterSettingsPrivatechat.Codec::class)
         register(Side.SERVER, "FRIENDLIST_LOADED", FriendlistLoaded::class, EmptyPacketCodec(FriendlistLoaded))
+        register(Side.SERVER, "MESSAGE_GAME", MessageGame::class, MessageGame.Codec)
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
         register(Side.CLIENT, "CLIENT_CHEAT", ClientCheat::class, ClientCheat.Codec::class)

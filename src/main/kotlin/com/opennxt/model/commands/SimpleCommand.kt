@@ -1,4 +1,5 @@
 package com.opennxt.model.commands
 
-class SimpleCommand: Command() {
+abstract class SimpleCommand: Command() {
+    override fun autocomplete(sender: CommandSender, alias: String, command: String): List<String> = emptyList()
 }

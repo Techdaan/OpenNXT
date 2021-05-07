@@ -19,7 +19,6 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
     private val logger = KotlinLogging.logger {  }
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
-        logger.info { "readable = ${buf.readableBytes()}" }
         buf.markReaderIndex()
 
         val id = buf.readUnsignedByte().toInt()

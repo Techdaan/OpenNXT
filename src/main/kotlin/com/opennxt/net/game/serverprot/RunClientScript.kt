@@ -25,7 +25,6 @@ data class RunClientScript(val script: Int, val args: Array<Any>) : GamePacket {
         override fun decode(buf: GamePacketReader): RunClientScript {
             val desc = buf.getString()
 
-            println(desc)
             val args = arrayOfNulls<Any>(desc.length)
             val chars = desc.toCharArray()
             for (i in desc.length - 1 downTo 0) {
