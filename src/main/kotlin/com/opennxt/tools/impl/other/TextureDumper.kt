@@ -55,7 +55,7 @@ class TextureDumper : Tool(name = "texture-dump", help = "This tool dumps textur
 
             else -> {
                 logger.error { "Invalid option found! | Index: $idx | Texture: $textureId" }
-                exitProcess(901)
+                exitProcess(1)
             }
         }
     }
@@ -65,7 +65,7 @@ class TextureDumper : Tool(name = "texture-dump", help = "This tool dumps textur
             logger.error { "No texture found! | Index: $index - Texture: $textureId | " +
                     "RANGE: ${filesystem.getReferenceTable(index)?.archives?.firstKey()} - " +
                     "${filesystem.getReferenceTable(index)?.archives?.lastKey()}" }
-            exitProcess(902)
+            exitProcess(1)
         }
 
         val data = Unpooled.wrappedBuffer(Container.decode(filesystem.read(index, textureId)!!).data)
@@ -108,7 +108,7 @@ class TextureDumper : Tool(name = "texture-dump", help = "This tool dumps textur
             }
             else -> {
                 logger.error { "Invalid index found! | Index: $index | Texture: $textureId" }
-                exitProcess(903)
+                exitProcess(1)
             }
         }
     }
@@ -121,7 +121,7 @@ class TextureDumper : Tool(name = "texture-dump", help = "This tool dumps textur
             File("${Constants.TEXTURES_PATH_ETC}").mkdirs()
         } catch (e: SecurityException) {
             logger.error { "Unable to create required directories!" }
-            exitProcess(900)
+            exitProcess(1)
         }
     }
 }
