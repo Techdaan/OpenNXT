@@ -27,6 +27,8 @@ class ConnectedProxyClient(val connection: ConnectedClient) : Tickable {
     override fun tick() {
         if (!ready || !other.ready) return
 
+        val player = connection.channel.attr(ProxyChannelAttributes.PROXY_PLAYER).get()
+
         while (true) {
             val packet = connection.incomingQueue.poll() ?: break
 
@@ -46,29 +48,32 @@ class ConnectedProxyClient(val connection: ConnectedClient) : Tickable {
                         "[RECV] ${connection.side}: ${raw.opcode} (name=${incomingNames[raw.opcode]}, real size=${raw.buf.readableBytes()})."
                     }
                 }
-            } else if (packet is ClientCheat) {
-                when (packet.cheat) {
-                    "hexdumpon" -> {
-                        hexdump = true
-                        other.hexdump = true
-                        connection.write(Message.ConsoleMessage("Hexdumps turned on").createPacket())
-                    }
-                    "hexdumpoff" -> {
-                        hexdump = false
-                        other.hexdump = false
-                        connection.write(Message.ConsoleMessage("Hexdumps turned off").createPacket())
-                    }
-                    else -> connection.write(
-                        Message.ConsoleError("Unknown proxy command: '${packet.cheat}'").createPacket()
-                    )
-                }
             } else {
-                logger.info { "[RECV] ${connection.side}: $packet" }
+                player.handlePacket(packet)
             }
-
-            if (packet is WorldListFetchReply) {
-                worldList.handle(packet)
-            }
+//            } else if (packet is ClientCheat) {
+//                when (packet.cheat) {
+//                    "hexdumpon" -> {
+//                        hexdump = true
+//                        other.hexdump = true
+//                        connection.write(Message.ConsoleMessage("Hexdumps turned on").createPacket())
+//                    }
+//                    "hexdumpoff" -> {
+//                        hexdump = false
+//                        other.hexdump = false
+//                        connection.write(Message.ConsoleMessage("Hexdumps turned off").createPacket())
+//                    }
+//                    else -> connection.write(
+//                        Message.ConsoleError("Unknown proxy command: '${packet.cheat}'").createPacket()
+//                    )
+//                }
+//            } else {
+//                logger.info { "[RECV] ${connection.side}: $packet" }
+//            }
+//
+//            if (packet is WorldListFetchReply) {
+//                worldList.handle(packet)
+//            }
 
             other.connection.write(packet)
         }

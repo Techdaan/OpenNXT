@@ -4,9 +4,11 @@ import com.opennxt.model.commands.CommandSender
 import com.opennxt.model.messages.Message
 import com.opennxt.model.tick.Tickable
 import com.opennxt.net.ConnectedClient
+import com.opennxt.net.game.GamePacket
 import mu.KotlinLogging
 
 abstract class BasePlayer(var client: ConnectedClient): CommandSender, Tickable {
+    var noTimeouts = 0
     private val logger = KotlinLogging.logger { }
 
     override fun message(message: Message) {
@@ -14,6 +16,10 @@ abstract class BasePlayer(var client: ConnectedClient): CommandSender, Tickable 
     }
 
     override fun message(message: String) {
+        client.write(Message.ConsoleMessage(message).createPacket())
+    }
+
+    override fun console(message: String) {
         client.write(Message.ConsoleMessage(message).createPacket())
     }
 
@@ -27,5 +33,9 @@ abstract class BasePlayer(var client: ConnectedClient): CommandSender, Tickable 
 
     override fun tick() {
 
+    }
+
+    fun write(message: GamePacket) {
+        client.write(message)
     }
 }

@@ -5,6 +5,7 @@ import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.login.LoginPacket
 import com.opennxt.net.proxy.ConnectedProxyClient
 import com.opennxt.net.proxy.ProxyChannelAttributes
+import com.opennxt.net.proxy.ProxyPlayer
 import io.netty.channel.Channel
 import mu.KotlinLogging
 import java.util.concurrent.LinkedBlockingQueue
@@ -35,6 +36,11 @@ object LoginThread : Thread("login-thread") {
                 if (channel != null) {
                     val clientSide = ConnectedProxyClient(context.channel.attr(RSChannelAttributes.CONNECTED_CLIENT).get())
                     val serverSide = ConnectedProxyClient(channel.attr(RSChannelAttributes.CONNECTED_CLIENT).get())
+
+                    val player = ProxyPlayer(clientSide)
+
+                    context.channel.attr(ProxyChannelAttributes.PROXY_PLAYER).set(player)
+                    channel.attr(ProxyChannelAttributes.PROXY_PLAYER).set(player)
 
                     clientSide.connection.processUnidentifiedPackets = true
                     serverSide.connection.processUnidentifiedPackets = true

@@ -12,6 +12,7 @@ import com.opennxt.filesystem.Filesystem
 import com.opennxt.filesystem.prefetches.PrefetchTable
 import com.opennxt.filesystem.sqlite.SqliteFilesystem
 import com.opennxt.login.LoginThread
+import com.opennxt.model.commands.CommandRepository
 import com.opennxt.model.lobby.Lobby
 import com.opennxt.model.tick.TickEngine
 import com.opennxt.model.world.World
@@ -58,6 +59,8 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
     lateinit var world: World
     lateinit var lobby: Lobby
+
+    lateinit var commands: CommandRepository
 
     private val bootstrap = ServerBootstrap()
 
@@ -126,6 +129,9 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
 
         logger.info { "Setting up filesystem resource manager" }
         resources = FilesystemResources(filesystem, Constants.RESOURCE_PATH)
+
+        logger.info { "Setting up command repository" }
+        commands = CommandRepository()
 
         logger.info { "Starting js5 thread" }
         Js5Thread.start()

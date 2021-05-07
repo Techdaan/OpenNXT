@@ -13,4 +13,5 @@ object ProxyChannelAttributes {
     val PASSWORD = AttributeKey.newInstance<String>("proxy-password")
     val PACKET = AttributeKey.newInstance<LoginPacket>("proxy-packet")
     val PROXY_CLIENT = AttributeKey.newInstance<ConnectedProxyClient>("proxy-client")
+    val PROXY_PLAYER = AttributeKey.newInstance<ProxyPlayer>("proxy-player")
 }

@@ -7,8 +7,12 @@ import com.opennxt.model.worldlist.WorldList
 import com.opennxt.model.worldlist.WorldListEntry
 import com.opennxt.model.worldlist.WorldListLocation
 import com.opennxt.net.ConnectedClient
+import com.opennxt.net.game.GamePacket
 import com.opennxt.net.game.clientprot.ClientCheat
 import com.opennxt.net.game.clientprot.WorldlistFetch
+import com.opennxt.net.game.handlers.ClientCheatHandler
+import com.opennxt.net.game.handlers.NoTimeoutHandler
+import com.opennxt.net.game.pipeline.GamePacketHandler
 import com.opennxt.net.game.serverprot.*
 import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
 import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
@@ -16,13 +20,17 @@ import com.opennxt.net.game.serverprot.variables.ClientSetvarcLarge
 import com.opennxt.net.game.serverprot.variables.ClientSetvarcSmall
 import com.opennxt.net.game.serverprot.variables.ClientSetvarcstrSmall
 import com.opennxt.net.game.serverprot.variables.ResetClientVarcache
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import mu.KotlinLogging
+import kotlin.reflect.KClass
 
 class LobbyPlayer(client: ConnectedClient) : BasePlayer(client) {
+    private val handlers =
+        Object2ObjectOpenHashMap<KClass<out GamePacket>, GamePacketHandler<in BasePlayer, out GamePacket>>()
     private val logger = KotlinLogging.logger { }
-    private var notimeouts = 0
 
-    private val worldList = WorldList(
+    val worldList = WorldList(
         arrayOf(
             WorldListEntry(
                 id = 1,
@@ -67,21 +75,21 @@ class LobbyPlayer(client: ConnectedClient) : BasePlayer(client) {
         )
     )
 
+    init {
+        handlers[NoTimeout::class] = NoTimeoutHandler
+        handlers[ClientCheat::class] = ClientCheatHandler
+    }
+
     fun handleIncomingPackets() {
         val queue = client.incomingQueue
         while (true) {
             val packet = queue.poll() ?: return
 
-            // Will make a map for this don't worry.
-            if (packet is WorldlistFetch) {
-                worldList.handleRequest(packet.checksum, client)
-            } else if (packet is ClientCheat) {
-                error("TODO: Support commands")
-            } else if (packet is NoTimeout) {
-                if ((notimeouts++ % 5) == 0)
-                    client.write(NoTimeout)
+            val handler = handlers[packet::class] as? GamePacketHandler<in BasePlayer, GamePacket>
+            if (handler != null) {
+                handler.handle(this, packet)
             } else {
-                logger.info { "todo: handle incoming $packet" }
+                logger.info { "TODO: Handle incoming $packet" }
             }
         }
     }
