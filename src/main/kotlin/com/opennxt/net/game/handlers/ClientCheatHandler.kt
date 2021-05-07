@@ -3,9 +3,11 @@ package com.opennxt.net.game.handlers
 import com.opennxt.OpenNXT
 import com.opennxt.model.commands.CommandException
 import com.opennxt.model.commands.CommandSender
+import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.messages.Message
 import com.opennxt.net.game.clientprot.ClientCheat
 import com.opennxt.net.game.pipeline.GamePacketHandler
+import com.opennxt.net.game.serverprot.ConsoleFeedback
 
 object ClientCheatHandler : GamePacketHandler<CommandSender, ClientCheat> {
     override fun handle(context: CommandSender, packet: ClientCheat) {
@@ -18,8 +20,13 @@ object ClientCheatHandler : GamePacketHandler<CommandSender, ClientCheat> {
                     return
                 }
 
-                context.console("TODO: CONSOLE_FEEDBACK packet support")
-                // TODO Send CONSOLE_FEEDBACK packet here
+                if (completions.isNotEmpty()) {
+                    if (context is BasePlayer) {
+                        context.write(ConsoleFeedback("", "", completions.size, completions))
+                    } else {
+                        context.console("Completions: $completions")
+                    }
+                }
             } else {
                 OpenNXT.commands.execute(context, packet.cheat)
             }
