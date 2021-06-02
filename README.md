@@ -1,4 +1,4 @@
-# OpenNXT - RS3 918
+# OpenNXT - RS3 919
 
 A RS3 RSPS framework targeted at NXT, the goal is to stay up-to-date with RS3
 
@@ -15,6 +15,21 @@ Tools can be executed through the command line with the following parameters: `r
 
 You can create your tools easily by creating a new class in `com.opennxt.tools.impl`. Your class must extend from base
 class `com.opennxt.tools.Tool`. Tools are registered automatically using classpath scanning.
+
+# Updating
+To update OpenNXT to a new version:
+
+1. Download the latest clients using `run-tool client-downloader`
+2. Download the latest cache using `run-tool cache-downloader`
+3. Patch the latest clients using `run-tool client-patcher`
+4. Update the `build` field in `./data/config/server.toml`
+
+If the version you are updating to is not yet supported by OpenNXT OR you want to contribute to the project's networking-related code and implementations, it is highly recommended you also fulfil these steps:
+1. In `com.opennxt.net.login.LoginEncoder`, replace `RS3_MODULUS` with the `old login` key printed by the patcher.
+2. Create a new directory: `./data/prot/[new version]/`, replacing `[new version]` with the server version.
+3. Open the win64.exe client in Ghidra, and run the [Ghidra NXT Auto Refactoring Script](https://github.com/Techdaan/rs3nxt-ghidra-scripts). For more information on how to install and use this tool you can visit [my Rune-Server thread.](https://www.rune-server.ee/runescape-development/rs-503-client-server/downloads/698604-nxt-win64-ghidra-refactoring-script.html)
+4. Run the script and use the data it prints to the console to populate the files in `./data/prot/[version]/*.toml`. The tool does not print `clientProtNames`. Those, you will have to do manually.
+5. Populate the packet fields using files in the `./data/prot/[version]/[(client/server)prot]` directories
 
 # Setup
 
