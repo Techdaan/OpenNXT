@@ -12,6 +12,7 @@ import com.opennxt.net.game.clientprot.ClientCheat
 import com.opennxt.net.game.clientprot.WorldlistFetch
 import com.opennxt.net.game.handlers.ClientCheatHandler
 import com.opennxt.net.game.handlers.NoTimeoutHandler
+import com.opennxt.net.game.handlers.WorldlistFetchHandler
 import com.opennxt.net.game.pipeline.GamePacketHandler
 import com.opennxt.net.game.serverprot.*
 import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
@@ -78,6 +79,7 @@ class LobbyPlayer(client: ConnectedClient) : BasePlayer(client) {
     init {
         handlers[NoTimeout::class] = NoTimeoutHandler
         handlers[ClientCheat::class] = ClientCheatHandler
+        handlers[WorldlistFetch::class] = WorldlistFetchHandler as GamePacketHandler<in BasePlayer, out GamePacket>
     }
 
     fun handleIncomingPackets() {
@@ -100,25 +102,25 @@ class LobbyPlayer(client: ConnectedClient) : BasePlayer(client) {
 
         client.write(IfOpenTop(906))
 
-        client.write(IfOpenSub(907, flag = true, parent = InterfaceHash(parent = 906, component = 65)))
-        client.write(IfOpenSub(910, flag = true, parent = InterfaceHash(parent = 906, component = 66)))
-        client.write(IfOpenSub(909, flag = true, parent = InterfaceHash(parent = 906, component = 67)))
-        client.write(IfOpenSub(912, flag = true, parent = InterfaceHash(parent = 906, component = 69)))
-        client.write(IfOpenSub(589, flag = true, parent = InterfaceHash(parent = 906, component = 68)))
-        client.write(IfOpenSub(911, flag = true, parent = InterfaceHash(parent = 906, component = 70)))
-        client.write(IfOpenSub(914, flag = true, parent = InterfaceHash(parent = 906, component = 127)))
-        client.write(IfOpenSub(915, flag = true, parent = InterfaceHash(parent = 906, component = 128)))
-        client.write(IfOpenSub(913, flag = true, parent = InterfaceHash(parent = 906, component = 129)))
-        client.write(IfOpenSub(815, flag = true, parent = InterfaceHash(parent = 906, component = 136)))
-        client.write(IfOpenSub(803, flag = true, parent = InterfaceHash(parent = 906, component = 131)))
-        client.write(IfOpenSub(822, flag = true, parent = InterfaceHash(parent = 906, component = 132)))
-        client.write(IfOpenSub(825, flag = true, parent = InterfaceHash(parent = 906, component = 114)))
-        client.write(IfOpenSub(821, flag = true, parent = InterfaceHash(parent = 906, component = 115)))
-        client.write(IfOpenSub(808, flag = true, parent = InterfaceHash(parent = 906, component = 113)))
-        client.write(IfOpenSub(820, flag = true, parent = InterfaceHash(parent = 906, component = 133)))
-        client.write(IfOpenSub(811, flag = true, parent = InterfaceHash(parent = 906, component = 130)))
-        client.write(IfOpenSub(826, flag = true, parent = InterfaceHash(parent = 906, component = 82)))
-        client.write(IfOpenSub(801, flag = true, parent = InterfaceHash(parent = 906, component = 36)))
+        client.write(IfOpenSub(id=907, flag=true, parent=InterfaceHash(parent=906, component=65)))
+        client.write(IfOpenSub(id=910, flag=true, parent=InterfaceHash(parent=906, component=66)))
+        client.write(IfOpenSub(id=909, flag=true, parent=InterfaceHash(parent=906, component=67)))
+        client.write(IfOpenSub(id=912, flag=true, parent=InterfaceHash(parent=906, component=69)))
+        client.write(IfOpenSub(id=589, flag=true, parent=InterfaceHash(parent=906, component=68)))
+        client.write(IfOpenSub(id=911, flag=true, parent=InterfaceHash(parent=906, component=70)))
+        client.write(IfOpenSub(id=914, flag=true, parent=InterfaceHash(parent=906, component=128)))
+        client.write(IfOpenSub(id=915, flag=true, parent=InterfaceHash(parent=906, component=129)))
+        client.write(IfOpenSub(id=913, flag=true, parent=InterfaceHash(parent=906, component=130)))
+        client.write(IfOpenSub(id=815, flag=true, parent=InterfaceHash(parent=906, component=137)))
+        client.write(IfOpenSub(id=803, flag=true, parent=InterfaceHash(parent=906, component=132)))
+        client.write(IfOpenSub(id=822, flag=true, parent=InterfaceHash(parent=906, component=133)))
+        client.write(IfOpenSub(id=825, flag=true, parent=InterfaceHash(parent=906, component=115)))
+        client.write(IfOpenSub(id=821, flag=true, parent=InterfaceHash(parent=906, component=116)))
+        client.write(IfOpenSub(id=808, flag=true, parent=InterfaceHash(parent=906, component=114)))
+        client.write(IfOpenSub(id=820, flag=true, parent=InterfaceHash(parent=906, component=134)))
+        client.write(IfOpenSub(id=811, flag=true, parent=InterfaceHash(parent=906, component=131)))
+        client.write(IfOpenSub(id=826, flag=true, parent=InterfaceHash(parent=906, component=82)))
+        client.write(IfOpenSub(id=801, flag=true, parent=InterfaceHash(parent=906, component=36)))
 
         client.write(ClientSetvarcLarge(2771, 55004971))
         client.write(ClientSetvarcSmall(3496, 0))
