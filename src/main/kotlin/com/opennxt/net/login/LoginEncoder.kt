@@ -12,7 +12,7 @@ import kotlin.system.exitProcess
 
 // TODO Grab this from patcher & store in file, can be done automatically.
 private val RS3_MODULUS = BigInteger(
-    "da1bf980d920a113eb1ba9646e0d2c87f8fbb1afc117ef1f98eadcda42cc491006bedd3e8129c5d9269e0bacdf4322a0ee7de4614b08300998dd65c05d93e99d9aa66fbba3397886a9dc5e2f186e443f783babc5fb2e5ac1ae5c248889df68bc7be8a2345e24c449db2a2f9e55fbb6197344f6dc24c7be08573051bde7aaaa55",
+    "b86aa1562d8e3f1f68a8cd1581f5ae7996683ddb887dfd4c4547fa54b22282ec42fd2e11cd81e03667f31d5e55c7a7dd6ae005b758944d8eb61d185900941220c4c6d84b694a985c1bbdedbec024c7e0cc1f2f46ba50d42da8efc4fb6be44f8678c9305809b1482c681dd17ae75f90baaf9ffbbc01387c629a8e802859ba9205",
     16
 )
 private val RS3_EXPONENT = BigInteger("10001", 16)
