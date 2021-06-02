@@ -106,7 +106,7 @@ object Js5PacketCodec {
         }
 
         override fun decode(buf: GamePacketReader): Js5Packet.Prefetches {
-            val prefetches = IntArray(30) { buf.buffer.readInt() }
+            val prefetches = IntArray(31) { buf.buffer.readInt() }
             return Js5Packet.Prefetches(prefetches)
         }
     }

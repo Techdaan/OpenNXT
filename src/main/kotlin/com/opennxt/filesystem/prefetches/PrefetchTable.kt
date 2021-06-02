@@ -38,6 +38,7 @@ class PrefetchTable(val entries: IntArray) {
             IndexPrefetch(57),
             IndexPrefetch(58),
             IndexPrefetch(59),
+            IndexPrefetch(60),
         )
 
         fun of(fs: Filesystem, prefetches: Array<Prefetch> = RS3_DEFAULT): PrefetchTable =
