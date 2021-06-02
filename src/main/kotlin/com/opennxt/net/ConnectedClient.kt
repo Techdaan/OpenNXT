@@ -50,7 +50,11 @@ class ConnectedClient(val side: Side, val channel: Channel, var processUnidentif
         try {
             val registration =
                 PacketRegistry.getRegistration(if (side == Side.CLIENT) Side.SERVER else Side.CLIENT, packet::class)
-                    ?: throw NullPointerException("Registration not found for packet $packet side $side")
+
+            if (registration == null) {
+                logger.warn("Registration not found for packet $packet side $side")
+                return
+            }
 
             val buffer = Unpooled.buffer()
             @Suppress("UNCHECKED_CAST")

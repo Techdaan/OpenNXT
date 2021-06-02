@@ -1,0 +1,6 @@
+xtea0 int
+bool ubyte
+xtea1 int
+xtea2 int
+xtea3 int
+id ushort
