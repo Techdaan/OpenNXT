@@ -80,16 +80,20 @@ object Js5PacketCodec {
 
     object RequestFile : PacketCodec<Js5Packet.RequestFile> {
         val opcodeNxtLow = 32
+        val opcodeLow = 0
+        val opcodeHigh = 1
         val opcodeNxtHigh1 = 17
         val opcodeNxtHigh2 = 33
 
         override fun decode(buf: GamePacketReader): Js5Packet.RequestFile {
-            return Js5Packet.RequestFile(
+            val packet = Js5Packet.RequestFile(
                 false,
                 buf.buffer.readUnsignedByte().toInt(),
                 buf.buffer.readInt(),
                 buf.buffer.readUnsignedShort()
             )
+            buf.buffer.skipBytes(2)
+            return packet
         }
 
         override fun encode(packet: Js5Packet.RequestFile, buf: GamePacketBuilder) {

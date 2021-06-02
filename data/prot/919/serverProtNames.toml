@@ -1,3 +1,4 @@
+[values]
 0 = "RESET_CLIENT_VARCACHE"
 1 = "VARCLAN"
 2 = "IF_SETMODEL"

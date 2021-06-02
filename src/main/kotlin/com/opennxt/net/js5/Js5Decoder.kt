@@ -47,12 +47,14 @@ class Js5Decoder(val session: Js5Session) : ByteToMessageDecoder() {
 
         if (buf.readableBytes() < 10) return
         when (val opcode = buf.readUnsignedByte().toInt()) {
+            Js5PacketCodec.RequestFile.opcodeLow,
+            Js5PacketCodec.RequestFile.opcodeHigh,
             Js5PacketCodec.RequestFile.opcodeNxtLow,
             Js5PacketCodec.RequestFile.opcodeNxtHigh1,
             Js5PacketCodec.RequestFile.opcodeNxtHigh2 -> {
                 val request = Js5PacketCodec.RequestFile.decode(GamePacketReader(buf))
-                request.priority = opcode != Js5PacketCodec.RequestFile.opcodeNxtLow
-                logger.info { "Requested file ${request.index}, ${request.archive}. Priority: ${request.priority}" }
+                request.priority = opcode != Js5PacketCodec.RequestFile.opcodeNxtLow && opcode != Js5PacketCodec.RequestFile.opcodeNxtLow
+//                logger.info { "Requested file ${request.index}, ${request.archive}. Priority: ${request.priority}" }
 
                 if (request.priority) session.highPriorityRequests.add(request)
                 else session.lowPriorityRequests.add(request)

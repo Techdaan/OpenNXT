@@ -11,7 +11,7 @@ import java.util.zip.CRC32
 
 class ReferenceTable(val filesystem: Filesystem, val index: Int) {
 
-    val logger = KotlinLogging.logger {  }
+    val logger = KotlinLogging.logger { }
 
     var version = 0
     var format = 7
@@ -241,10 +241,20 @@ class ReferenceTable(val filesystem: Filesystem, val index: Int) {
     fun highestEntry(): Int = if (archives.isEmpty()) 0 else archives.lastKey() + 1
 
     fun archiveSize(): Int {
-        var sum = 0
-        for (value in archives.values)
-            sum += value.uncompressedSize
-        return sum
+        if (mask and 0x4 != 0) {
+            var sum = 0
+            for (value in archives.values)
+                sum += value.uncompressedSize
+            return sum
+        } else {
+            var sum = 0
+            for (key in archives.keys) {
+                val data = filesystem.read(index, key) ?: throw NullPointerException("$index, $key")
+                val container = Container.decode(data)
+                sum += container.data.size
+            }
+            return sum
+        }
     }
 
     fun totalCompressedSize(): Long {
