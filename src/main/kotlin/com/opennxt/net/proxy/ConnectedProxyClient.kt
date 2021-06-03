@@ -2,6 +2,7 @@ package com.opennxt.net.proxy
 
 import com.opennxt.OpenNXT
 import com.opennxt.model.messages.Message
+import com.opennxt.model.proxy.PacketDumper
 import com.opennxt.model.tick.Tickable
 import com.opennxt.model.worldlist.WorldList
 import com.opennxt.net.ConnectedClient
@@ -11,9 +12,13 @@ import com.opennxt.net.game.serverprot.WorldListFetchReply
 import io.netty.buffer.ByteBufUtil
 import mu.KotlinLogging
 
-class ConnectedProxyClient(val connection: ConnectedClient) : Tickable {
+class ConnectedProxyClient(val connection: ConnectedClient, dumper: PacketDumper) : Tickable {
     val incomingNames =
         (if (connection.side == Side.CLIENT) OpenNXT.protocol.clientProtNames else OpenNXT.protocol.serverProtNames).reversedValues()
+
+    init {
+        connection.dumper = dumper
+    }
 
     private val logger = KotlinLogging.logger { }
 
@@ -51,29 +56,6 @@ class ConnectedProxyClient(val connection: ConnectedClient) : Tickable {
             } else {
                 player.handlePacket(packet)
             }
-//            } else if (packet is ClientCheat) {
-//                when (packet.cheat) {
-//                    "hexdumpon" -> {
-//                        hexdump = true
-//                        other.hexdump = true
-//                        connection.write(Message.ConsoleMessage("Hexdumps turned on").createPacket())
-//                    }
-//                    "hexdumpoff" -> {
-//                        hexdump = false
-//                        other.hexdump = false
-//                        connection.write(Message.ConsoleMessage("Hexdumps turned off").createPacket())
-//                    }
-//                    else -> connection.write(
-//                        Message.ConsoleError("Unknown proxy command: '${packet.cheat}'").createPacket()
-//                    )
-//                }
-//            } else {
-//                logger.info { "[RECV] ${connection.side}: $packet" }
-//            }
-//
-//            if (packet is WorldListFetchReply) {
-//                worldList.handle(packet)
-//            }
 
             other.connection.write(packet)
         }

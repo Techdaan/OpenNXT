@@ -1,5 +1,6 @@
 package com.opennxt.net
 
+import com.opennxt.model.proxy.PacketDumper
 import com.opennxt.net.buf.GamePacketBuilder
 import com.opennxt.net.buf.GamePacketReader
 import com.opennxt.net.game.GamePacket
@@ -12,7 +13,24 @@ import io.netty.channel.Channel
 import mu.KotlinLogging
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class ConnectedClient(val side: Side, val channel: Channel, var processUnidentifiedPackets: Boolean = false) {
+/**
+ * Handles incoming packets on the lowest possible level. This is usually called directly from the Netty pipeline, and
+ *   the [incomingQueue] is polled from the main thread. This way packets are received and decoded async, and handled
+ *   sync.
+ *
+ * This also handles sending packets to the other side of the channel.
+ *
+ * This class can be used for both the server (Where clients connect to) and the client (Which connects to a server).
+ *   It is, for example, used in the proxy as well.
+ *
+ * [side] represents the side of the remote. This means the server uses side "Client".
+ */
+class ConnectedClient(
+    val side: Side,
+    val channel: Channel,
+    var processUnidentifiedPackets: Boolean = false,
+    var dumper: PacketDumper? = null
+) {
 
     val logger = KotlinLogging.logger { }
 
@@ -20,6 +38,8 @@ class ConnectedClient(val side: Side, val channel: Channel, var processUnidentif
 
     fun receive(pair: OpcodeWithBuffer) {
         try {
+            dumper?.dump(pair.opcode, pair.buf)
+
             val registration = PacketRegistry.getRegistration(side, pair.opcode)
             if (registration == null) {
                 if (processUnidentifiedPackets)

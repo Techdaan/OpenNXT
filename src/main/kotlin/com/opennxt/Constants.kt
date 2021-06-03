@@ -10,4 +10,6 @@ object Constants {
     val CACHE_PATH = DATA_PATH.resolve("cache")
     val PROT_PATH = DATA_PATH.resolve("prot")
     val RESOURCE_PATH = DATA_PATH.resolve("resources")
+    val PROXY_PATH = DATA_PATH.resolve("proxy")
+    val PROXY_DUMP_PATH = PROXY_PATH.resolve("dumps")
 }
