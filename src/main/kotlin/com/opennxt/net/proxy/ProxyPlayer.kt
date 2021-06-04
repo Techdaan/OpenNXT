@@ -5,6 +5,7 @@ import com.opennxt.net.game.GamePacket
 import com.opennxt.net.game.clientprot.ClientCheat
 import com.opennxt.net.game.handlers.ClientCheatHandler
 import com.opennxt.net.game.pipeline.GamePacketHandler
+import com.opennxt.net.game.serverprot.RebuildNormal
 import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
 import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
 import com.opennxt.net.proxy.handler.IfOpenSubProxyHandler

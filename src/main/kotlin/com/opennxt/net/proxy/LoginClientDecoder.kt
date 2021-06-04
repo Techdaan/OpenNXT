@@ -11,7 +11,7 @@ import mu.KotlinLogging
 
 class LoginClientDecoder : ByteToMessageDecoder() {
 
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
         val state = ctx.channel().attr(ProxyChannelAttributes.LOGIN_STATE).get()
@@ -75,28 +75,34 @@ class LoginClientDecoder : ByteToMessageDecoder() {
                         )
                     )
                 } else {
-                    out.add(
-                        LoginPacket.GameLoginResponse(
-                            byte0 = payload.readUnsignedByte().toInt(),
-                            rights = payload.readUnsignedByte().toInt(),
-                            byte2 = payload.readUnsignedByte().toInt(),
-                            byte3 = payload.readUnsignedByte().toInt(),
-                            byte4 = payload.readUnsignedByte().toInt(),
-                            byte5 = payload.readUnsignedByte().toInt(), // <--> 6 byte
-                            byte6 = 0,//payload.readUnsignedByte().toInt(),
-                            playerIndex = payload.readUnsignedShort(),
-                            byte8 = payload.readUnsignedByte().toInt(),
-                            medium9 = payload.readMedium(),
-                            isMember = payload.readUnsignedByte().toInt(),
-                            username = payload.readNullCircumfixedString(),
-                            short12 = payload.readUnsignedShort(),
-                            int13 = payload.readInt()
-                        )
+                    val response = LoginPacket.GameLoginResponse(
+                        byte0 = payload.readUnsignedByte().toInt(),
+                        rights = payload.readUnsignedByte().toInt(),
+                        byte2 = payload.readUnsignedByte().toInt(),
+                        byte3 = payload.readUnsignedByte().toInt(),
+                        byte4 = payload.readUnsignedByte().toInt(),
+                        byte5 = payload.readUnsignedByte().toInt(), // <--> 6 byte
+                        byte6 = 0,//payload.readUnsignedByte().toInt(),
+                        playerIndex = payload.readUnsignedShort(),
+                        byte8 = payload.readUnsignedByte().toInt(),
+                        medium9 = payload.readMedium(),
+                        isMember = payload.readUnsignedByte().toInt(),
+                        username = payload.readNullCircumfixedString(),
+                        short12 = payload.readUnsignedShort(),
+                        int13 = payload.readInt()
                     )
+
+                    ctx.channel().attr(ProxyChannelAttributes.PLAYER_INDEX).set(response.playerIndex)
+
+                    out.add(response)
                 }
             } finally {
                 if (payload.isReadable)
-                    logger.warn { "Packet was still readable: ${ctx.channel().attr(ProxyChannelAttributes.PACKET).get()::class.simpleName}: ${payload.readableBytes()} bytes remaining" }
+                    logger.warn {
+                        "Packet was still readable: ${
+                            ctx.channel().attr(ProxyChannelAttributes.PACKET).get()::class.simpleName
+                        }: ${payload.readableBytes()} bytes remaining"
+                    }
 
                 payload.release()
             }

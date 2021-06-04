@@ -1,9 +1,13 @@
 package com.opennxt.net.login
 
+import com.opennxt.OpenNXT
 import com.opennxt.config.RsaConfig
 import com.opennxt.ext.decipherXtea
 import com.opennxt.ext.readBuild
 import com.opennxt.ext.readString
+import com.opennxt.model.entity.PlayerEntity
+import com.opennxt.model.world.TileLocation
+import com.opennxt.model.world.WorldPlayer
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.RSChannelAttributes
 import com.opennxt.net.login.LoginRSAHeader.Companion.readLoginHeader
@@ -16,7 +20,7 @@ import mu.KotlinLogging
 import kotlin.system.exitProcess
 
 class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecoder() {
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
         buf.markReaderIndex()
@@ -39,13 +43,21 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                 return
             }
 
-            logger.info { "TODO: Send game login response" }
+            if (ctx.channel().attr(RSChannelAttributes.PASSTHROUGH_CHANNEL).get() == null) {
+                logger.info { "TODO: Send game login response" }
 
-            // TODO Send login response here? Why are we doing this here...
+                OpenNXT.world.addPlayer(
+                    WorldPlayer(
+                        ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get(),
+                        PlayerEntity(TileLocation(3222, 3222, 0))
+                    )
+                )
+                // TODO Send login response here? Why are we doing this here...
+            }
             return
         }
 
-        if (buf.readableBytes() < 2){
+        if (buf.readableBytes() < 2) {
             buf.resetReaderIndex()
             return
         }
@@ -61,7 +73,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
         val payload = buf.readBytes(length)
         try {
             val build = payload.readBuild()
-            val header = payload.readLoginHeader(type,rsaPair.exponent, rsaPair.modulus)
+            val header = payload.readLoginHeader(type, rsaPair.exponent, rsaPair.modulus)
 
             if (header !is LoginRSAHeader.Fresh && type != LoginType.LOBBY) {
                 logger.info { "got reconnecting block in lobby? what?" } // literally impossible but ok.
@@ -94,7 +106,15 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                     header as LoginRSAHeader.Fresh
 
                     logger.info { "Attempted lobby login: $name, *****" }
-                    out.add(LoginPacket.LobbyLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
+                    out.add(
+                        LoginPacket.LobbyLoginRequest(
+                            build,
+                            header,
+                            name,
+                            header.password,
+                            Unpooled.wrappedBuffer(original)
+                        )
+                    )
                 }
                 LoginType.GAME -> {
                     if (header !is LoginRSAHeader.Fresh) {
@@ -106,7 +126,15 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                     }
 
                     logger.info { "Attempted game login: $name, *****" }
-                    out.add(LoginPacket.GameLoginRequest(build, header, name, header.password, Unpooled.wrappedBuffer(original)))
+                    out.add(
+                        LoginPacket.GameLoginRequest(
+                            build,
+                            header,
+                            name,
+                            header.password,
+                            Unpooled.wrappedBuffer(original)
+                        )
+                    )
                 }
             }
         } catch (e: Exception) {

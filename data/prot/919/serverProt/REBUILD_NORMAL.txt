@@ -1,0 +1,10 @@
+unused1 ubyte
+chunkX ushortle128
+unused2 ubyte
+chunkY ushortle
+npcBits u128byte
+mapSize ubyte128
+
+areaType ushort
+hash1 int
+hash2 int

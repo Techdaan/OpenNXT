@@ -7,6 +7,7 @@ import com.opennxt.net.game.GamePacket
 import com.opennxt.net.game.PacketRegistry
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.pipeline.OpcodeWithBuffer
+import com.opennxt.net.proxy.ProxyChannelAttributes
 import com.opennxt.net.proxy.UnidentifiedPacket
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -36,6 +37,8 @@ class ConnectedClient(
 
     val incomingQueue = ConcurrentLinkedQueue<GamePacket>()
 
+    var initedPlayerList = false
+
     fun receive(pair: OpcodeWithBuffer) {
         try {
             dumper?.dump(pair.opcode, pair.buf)
@@ -47,7 +50,42 @@ class ConnectedClient(
                 return
             }
 
+            // TODO How can we do the following in a better way? This is getting very spaghetti.
+            // TODO Clean up the following code...
+            if (registration.name == "REBUILD_NORMAL" && !initedPlayerList) {
+                val copy = UnidentifiedPacket(OpcodeWithBuffer(pair.opcode, pair.buf.copy()))
+                incomingQueue.add(copy)
+
+                val playerIndex = channel.attr(ProxyChannelAttributes.PLAYER_INDEX).get()
+                println("RECEIVED REBUILD NORMAL -- DECODE PLAYER LIST FIRST - PLAYER INDEX IS $playerIndex")
+                initedPlayerList = true
+
+                val reader = GamePacketReader(pair.buf)
+                reader.switchToBitAccess()
+                reader.getBits(0x1e)
+                for (i in 1 until 2048) {
+                    if (i == playerIndex) {
+                        println("I IS PLAYER INDEX @ $i")
+                        continue
+                    }
+
+                    reader.getBits(0x14)
+                }
+                reader.switchToByteAccess()
+
+                val decoded = registration.codec.decode(reader)
+                if (pair.buf.readableBytes() != 0 ){
+                    logger.warn { "Readable bytes in packet ${registration.name}: ${pair.buf.readableBytes()}" }
+                }
+
+                logger.info { decoded.toString() }
+                return
+            }
+
             val decoded = registration.codec.decode(GamePacketReader(pair.buf))
+            if (pair.buf.readableBytes() != 0 ){
+                logger.warn { "Readable bytes in packet ${registration.name}: ${pair.buf.readableBytes()}" }
+            }
 
             incomingQueue.add(decoded)
         } catch (e: Exception) {

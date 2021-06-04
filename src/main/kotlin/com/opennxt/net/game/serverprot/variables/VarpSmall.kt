@@ -8,7 +8,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 data class VarpSmall(val id: Int, val value: Int): GamePacket {
     class Codec(fields: Array<PacketFieldDeclaration>): DynamicGamePacketCodec<VarpSmall>(fields) {
         override fun fromMap(packet: Map<String, Any>): VarpSmall {
-            return VarpSmall(packet["id"] as Int, packet["value"] as Int)
+            var value = packet["value"] as Int
+            if (value == 255) value = -1
+            return VarpSmall(packet["id"] as Int, value)
         }
 
         override fun toMap(packet: VarpSmall): Map<String, Any> {

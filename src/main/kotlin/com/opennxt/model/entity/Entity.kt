@@ -9,4 +9,6 @@ import com.opennxt.model.world.TileLocation
  *
  * Ground items, objects etc... are also entities.
  */
-abstract class Entity(var location: TileLocation)
+abstract class Entity(var location: TileLocation) {
+    var index: Int = -1
+}
