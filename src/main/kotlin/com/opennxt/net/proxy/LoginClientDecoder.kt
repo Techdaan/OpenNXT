@@ -4,6 +4,7 @@ import com.opennxt.ext.readNullCircumfixedString
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.login.LoginPacket
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufUtil
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
@@ -75,6 +76,8 @@ class LoginClientDecoder : ByteToMessageDecoder() {
                         )
                     )
                 } else {
+                    println(ByteBufUtil.prettyHexDump(payload))
+
                     val response = LoginPacket.GameLoginResponse(
                         byte0 = payload.readUnsignedByte().toInt(),
                         rights = payload.readUnsignedByte().toInt(),
@@ -82,9 +85,9 @@ class LoginClientDecoder : ByteToMessageDecoder() {
                         byte3 = payload.readUnsignedByte().toInt(),
                         byte4 = payload.readUnsignedByte().toInt(),
                         byte5 = payload.readUnsignedByte().toInt(), // <--> 6 byte
-                        byte6 = 0,//payload.readUnsignedByte().toInt(),
+                        byte6 = payload.readUnsignedByte().toInt(),
                         playerIndex = payload.readUnsignedShort(),
-                        byte8 = payload.readUnsignedByte().toInt(),
+                        byte8 = 0, //payload.readUnsignedByte().toInt(),
                         medium9 = payload.readMedium(),
                         isMember = payload.readUnsignedByte().toInt(),
                         username = payload.readNullCircumfixedString(),
