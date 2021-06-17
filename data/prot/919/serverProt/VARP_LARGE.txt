@@ -1,2 +1,2 @@
-value int
+value intv1
 id ushortle

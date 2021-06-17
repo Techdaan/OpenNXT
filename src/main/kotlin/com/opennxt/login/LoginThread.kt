@@ -56,7 +56,7 @@ object LoginThread : Thread("login-thread") {
                         PacketDumper(Constants.PROXY_DUMP_PATH.resolve("$now-$type-$name").resolve("serverprot.bin"))
                     )
 
-                    val player = ProxyPlayer(clientSide)
+                    val player = ProxyPlayer(clientSide, name)
 
                     context.channel.attr(ProxyChannelAttributes.PROXY_PLAYER).set(player)
                     channel.attr(ProxyChannelAttributes.PROXY_PLAYER).set(player)
