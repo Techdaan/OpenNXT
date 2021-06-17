@@ -2,6 +2,7 @@ package com.opennxt.model.world
 
 import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.entity.PlayerEntity
+import com.opennxt.model.entity.player.InterfaceManager
 import com.opennxt.net.ConnectedClient
 import com.opennxt.net.GenericResponse
 import com.opennxt.net.game.GamePacket
@@ -15,10 +16,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import mu.KotlinLogging
 import kotlin.reflect.KClass
 
-class WorldPlayer(client: ConnectedClient, val entity: PlayerEntity) : BasePlayer(client) {
+class WorldPlayer(client: ConnectedClient, name: String, val entity: PlayerEntity) : BasePlayer(client, name) {
     private val handlers =
         Object2ObjectOpenHashMap<KClass<out GamePacket>, GamePacketHandler<in BasePlayer, out GamePacket>>()
     private val logger = KotlinLogging.logger { }
+
+    override val interfaces: InterfaceManager = InterfaceManager(this)
 
     fun handleIncomingPackets() {
         val queue = client.incomingQueue

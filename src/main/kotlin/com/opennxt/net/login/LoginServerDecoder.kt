@@ -49,6 +49,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
                 OpenNXT.world.addPlayer(
                     WorldPlayer(
                         ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get(),
+                        ctx.channel().attr(RSChannelAttributes.LOGIN_USERNAME).get(),
                         PlayerEntity(TileLocation(3222, 3222, 0))
                     )
                 )
@@ -93,6 +94,7 @@ class LoginServerDecoder(val rsaPair: RsaConfig.RsaKeyPair) : ByteToMessageDecod
             payload.skipBytes(1) // TODO This has to do with name being encoded as long, should prolly check it
             val name = payload.readString()
 
+            ctx.channel().attr(RSChannelAttributes.LOGIN_USERNAME).set(name)
             if (header.uniqueId != ctx.channel().attr(RSChannelAttributes.LOGIN_UNIQUE_ID).get()) {
                 logger.error { "Unique id mismatch - possible replay attack?" }
                 ctx.channel()

@@ -94,7 +94,7 @@ class LoginServerHandler : SimpleChannelInboundHandler<LoginPacket>() {
                         ctx.channel().pipeline().replace("login-encoder", "game-encoder", GamePacketEncoder())
                         ctx.channel().pipeline().replace("login-handler", "game-handler", DynamicPacketHandler())
 
-                        val player = LobbyPlayer(ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get())
+                        val player = LobbyPlayer(ctx.channel().attr(RSChannelAttributes.CONNECTED_CLIENT).get(), it.username)
 
                         OpenNXT.lobby.addPlayer(player)
                     }

@@ -11,6 +11,7 @@ object RSChannelAttributes {
     val LOGIN_UNIQUE_ID = AttributeKey.newInstance<Long>("login-unique-id")
 
     val LOGIN_TYPE = AttributeKey.newInstance<LoginType>("login-type")
+    val LOGIN_USERNAME = AttributeKey.newInstance<String>("login-username")
 
     val INCOMING_ISAAC = AttributeKey.newInstance<ISAACCipher>("incoming-isaac")
     val OUTGOING_ISAAC = AttributeKey.newInstance<ISAACCipher>("outgoing-isaac")

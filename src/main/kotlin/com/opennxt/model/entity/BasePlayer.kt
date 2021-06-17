@@ -1,13 +1,16 @@
 package com.opennxt.model.entity
 
 import com.opennxt.model.commands.CommandSender
+import com.opennxt.model.entity.player.InterfaceManager
 import com.opennxt.model.messages.Message
 import com.opennxt.model.tick.Tickable
 import com.opennxt.net.ConnectedClient
 import com.opennxt.net.game.GamePacket
 import mu.KotlinLogging
 
-abstract class BasePlayer(var client: ConnectedClient): CommandSender, Tickable {
+abstract class BasePlayer(var client: ConnectedClient, val name: String): CommandSender, Tickable {
+    abstract val interfaces: InterfaceManager
+
     var noTimeouts = 0
     private val logger = KotlinLogging.logger { }
 
