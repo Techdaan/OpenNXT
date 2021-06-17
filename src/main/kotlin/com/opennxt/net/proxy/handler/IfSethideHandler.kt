@@ -11,6 +11,6 @@ object IfSethideHandler : GamePacketHandler<BasePlayer, IfSethide> {
     val logger = KotlinLogging.logger {}
 
     override fun handle(context: BasePlayer, packet: IfSethide) {
-        (context as ProxyPlayer).plaintextDumpFile.appendLine("player.interfaces.hide(id = ${packet.parent.parent}, component = ${packet.parent.component}, hide = ${packet.hidden})")
+        (context as ProxyPlayer).plaintextDumpFile.appendLine("player.interfaces.hide(id = ${packet.parent.parent}, component = ${packet.parent.component}, hidden = ${packet.hidden})")
     }
 }

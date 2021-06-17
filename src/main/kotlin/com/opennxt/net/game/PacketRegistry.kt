@@ -139,6 +139,7 @@ object PacketRegistry {
         register(Side.SERVER, "MESSAGE_GAME", MessageGame::class, MessageGame.Codec)
         register(Side.SERVER, "CONSOLE_FEEDBACK", ConsoleFeedback::class, ConsoleFeedback.Codec)
         register(Side.SERVER, "REBUILD_NORMAL", RebuildNormal::class, RebuildNormal.Codec::class)
+        register(Side.SERVER, "SERVER_TICK_END", ServerTickEnd::class, EmptyPacketCodec(ServerTickEnd))
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
         register(Side.CLIENT, "CLIENT_CHEAT", ClientCheat::class, ClientCheat.Codec::class)
