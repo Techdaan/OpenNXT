@@ -3,8 +3,7 @@ package com.opennxt.model.entity.player
 import com.opennxt.content.interfaces.InterfaceSlot
 import com.opennxt.model.InterfaceHash
 import com.opennxt.model.entity.BasePlayer
-import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
-import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
+import com.opennxt.net.game.serverprot.ifaces.*
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import mu.KotlinLogging
 
@@ -108,21 +107,21 @@ class InterfaceManager(val player: BasePlayer) {
      * Applies a clickmask to a range of slots of a component
      */
     fun events(id: Int, component: Int, from: Int, to: Int, mask: Int) {
-//        player.client.write(IfSetEventsPacket(id, component, from, to, mask))
+        player.client.write(IfSetevents(InterfaceHash(id, component), from, to, mask))
     }
 
     /**
      * Sets the text on an interface
      */
-    fun setText(id: Int, component: Int, text: String) {
-//        player.client.write(IfSetTextPacket(id, component, text))
+    fun text(id: Int, component: Int, text: String) {
+        player.client.write(IfSettext(InterfaceHash(id, component), text))
     }
 
     /**
      * (Un)hides an interface by the interface id + component of the target interface
      */
-    fun setHide(id: Int, component: Int, hidden: Boolean) {
-//        player.client.write(IfSetHidePacket(id, component, hidden))
+    fun hide(id: Int, component: Int, hidden: Boolean) {
+        player.client.write(IfSethide(InterfaceHash(id, component), hidden))
     }
 
     /**

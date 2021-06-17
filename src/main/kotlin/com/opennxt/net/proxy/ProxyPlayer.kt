@@ -2,19 +2,17 @@ package com.opennxt.net.proxy
 
 import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.entity.player.InterfaceManager
+import com.opennxt.net.Side
 import com.opennxt.net.game.GamePacket
+import com.opennxt.net.game.PacketRegistry
 import com.opennxt.net.game.clientprot.ClientCheat
 import com.opennxt.net.game.handlers.ClientCheatHandler
 import com.opennxt.net.game.pipeline.GamePacketHandler
 import com.opennxt.net.game.serverprot.RebuildNormal
-import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
-import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
+import com.opennxt.net.game.serverprot.ifaces.*
 import com.opennxt.net.game.serverprot.variables.VarpLarge
 import com.opennxt.net.game.serverprot.variables.VarpSmall
-import com.opennxt.net.proxy.handler.IfOpenSubProxyHandler
-import com.opennxt.net.proxy.handler.IfOpenTopProxyHandler
-import com.opennxt.net.proxy.handler.VarpLargeHandler
-import com.opennxt.net.proxy.handler.VarpSmallHandler
+import com.opennxt.net.proxy.handler.*
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import mu.KotlinLogging
 import java.io.BufferedOutputStream
@@ -39,6 +37,9 @@ class ProxyPlayer(val proxyClient: ConnectedProxyClient, name: String) : BasePla
 
         handlers[IfOpenTop::class] = IfOpenTopProxyHandler
         handlers[IfOpenSub::class] = IfOpenSubProxyHandler
+        handlers[IfSetevents::class] = IfSetEventsHandler
+        handlers[IfSettext::class] = IfSettextHandler
+        handlers[IfSethide::class] = IfSethideHandler
         handlers[VarpSmall::class] = VarpSmallHandler
         handlers[VarpLarge::class] = VarpLargeHandler
 
@@ -53,7 +54,12 @@ class ProxyPlayer(val proxyClient: ConnectedProxyClient, name: String) : BasePla
     fun handlePacket(packet: GamePacket): Boolean {
         val handler = handlers[packet::class]
         if (handler == null) {
-            logger.info { "$packet" }
+            if (packet is UnidentifiedPacket) {
+                val name = PacketRegistry.getRegistration(Side.SERVER, packet.packet.opcode)?.name ?: "null"
+                plaintextDumpFile.appendLine("// $name - Unhandled/not decoded")
+            } else {
+                plaintextDumpFile.appendLine("// $packet")
+            }
             plaintextDumpFile.flush()
             return false
         }
