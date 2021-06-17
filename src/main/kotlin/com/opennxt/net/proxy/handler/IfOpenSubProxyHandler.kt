@@ -13,5 +13,6 @@ object IfOpenSubProxyHandler : GamePacketHandler<BasePlayer, IfOpenSub> {
 
     override fun handle(context: BasePlayer, packet: IfOpenSub) {
         (context as ProxyPlayer).plaintextDumpFile.appendLine("player.interfaces.open(id = ${packet.id}, parent = ${packet.parent.parent}, component = ${packet.parent.component}, walkable = ${packet.flag})")
+
     }
 }

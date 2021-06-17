@@ -10,9 +10,7 @@ import com.opennxt.net.game.pipeline.DynamicGamePacketCodec
 import com.opennxt.net.game.pipeline.GamePacketCodec
 import com.opennxt.net.game.protocol.PacketFieldDeclaration
 import com.opennxt.net.game.serverprot.*
-import com.opennxt.net.game.serverprot.ifaces.IfOpenSub
-import com.opennxt.net.game.serverprot.ifaces.IfOpenTop
-import com.opennxt.net.game.serverprot.ifaces.IfSetevents
+import com.opennxt.net.game.serverprot.ifaces.*
 import com.opennxt.net.game.serverprot.variables.*
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
@@ -128,6 +126,9 @@ object PacketRegistry {
         register(Side.SERVER, "WORLDLIST_FETCH_REPLY", WorldListFetchReply::class, WorldListFetchReply.Codec)
         register(Side.SERVER, "IF_OPENTOP", IfOpenTop::class, IfOpenTop.Codec::class)
         register(Side.SERVER, "IF_OPENSUB", IfOpenSub::class, IfOpenSub.Codec::class)
+        register(Side.SERVER, "IF_SETEVENTS", IfSetevents::class, IfSetevents.Codec::class)
+        register(Side.SERVER, "IF_SETTEXT", IfSettext::class, IfSettext.Codec::class)
+        register(Side.SERVER, "IF_SETHIDE", IfSethide::class, IfSethide.Codec::class)
         register(
             Side.SERVER,
             "CHAT_FILTER_SETTINGS_PRIVATECHAT",
@@ -137,7 +138,6 @@ object PacketRegistry {
         register(Side.SERVER, "FRIENDLIST_LOADED", FriendlistLoaded::class, EmptyPacketCodec(FriendlistLoaded))
         register(Side.SERVER, "MESSAGE_GAME", MessageGame::class, MessageGame.Codec)
         register(Side.SERVER, "CONSOLE_FEEDBACK", ConsoleFeedback::class, ConsoleFeedback.Codec)
-        register(Side.SERVER, "IF_SETEVENTS", IfSetevents::class, IfSetevents.Codec::class)
         register(Side.SERVER, "REBUILD_NORMAL", RebuildNormal::class, RebuildNormal.Codec::class)
 
         register(Side.CLIENT, "NO_TIMEOUT", NoTimeout::class, EmptyPacketCodec(NoTimeout))
