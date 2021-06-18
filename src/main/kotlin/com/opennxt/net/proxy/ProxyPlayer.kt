@@ -10,6 +10,7 @@ import com.opennxt.net.game.handlers.ClientCheatHandler
 import com.opennxt.net.game.pipeline.GamePacketHandler
 import com.opennxt.net.game.serverprot.RebuildNormal
 import com.opennxt.net.game.serverprot.RunClientScript
+import com.opennxt.net.game.serverprot.SetMapFlag
 import com.opennxt.net.game.serverprot.ifaces.*
 import com.opennxt.net.game.serverprot.variables.VarpLarge
 import com.opennxt.net.game.serverprot.variables.VarpSmall
@@ -44,6 +45,7 @@ class ProxyPlayer(val proxyClient: ConnectedProxyClient, name: String) : BasePla
         handlers[VarpSmall::class] = VarpSmallHandler
         handlers[VarpLarge::class] = VarpLargeHandler
         handlers[RunClientScript::class] = RunClientScriptHandler
+        handlers[SetMapFlag::class] = SetMapFlagHandler
 
         val path = proxyClient.connection.dumper!!.file.parent.resolve("plaintext.log")
         if (!Files.exists(path.parent))
