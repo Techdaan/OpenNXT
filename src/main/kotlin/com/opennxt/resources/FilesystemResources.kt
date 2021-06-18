@@ -7,6 +7,7 @@ import com.opennxt.resources.config.params.ParamDiskCodec
 import com.opennxt.resources.config.params.ParamFilesystemCodec
 import com.opennxt.resources.config.structs.StructDiskCodec
 import com.opennxt.resources.config.structs.StructFilesystemCodec
+import com.opennxt.resources.defaults.Defaults
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -19,6 +20,8 @@ class FilesystemResources(val filesystem: Filesystem, val path: Path) {
 
     private val fsCodices = EnumMap<ResourceType, FilesystemResourceCodec<*>>(ResourceType::class.java)
     private val diskCodices = EnumMap<ResourceType, DiskResourceCodec<*>>(ResourceType::class.java)
+
+    val defaults = Defaults(filesystem)
 
     init {
         instance = this

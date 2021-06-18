@@ -14,6 +14,7 @@ import com.opennxt.net.buf.DataType
 import com.opennxt.net.buf.GamePacketBuilder
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
+import java.security.MessageDigest
 import kotlin.math.abs
 
 object PlayerInfoEncoder {
@@ -214,10 +215,10 @@ object PlayerInfoEncoder {
     private fun packUpdateBlock(player: WorldPlayer, viewport: Viewport, target: PlayerEntity, block: GamePacketBuilder) {
         var maskData = 0x0
         var appearanceBlock: AppearanceUpdateBlock? = null
-        if (needsAppearanceUpdate(viewport, target.index, ByteArray(0)/*target.model.hash*/, block.writerIndex())) {
+        if (needsAppearanceUpdate(viewport, target.index, target.model.hash, block.writerIndex())) {
             appearanceBlock = AppearanceUpdateBlock()
             maskData = maskData or appearanceBlock.type.playerMask
-            viewport.cachedAppearanceHashes[target.index] = ByteArray(0) /*target.model.hash*/
+            viewport.cachedAppearanceHashes[target.index] = target.model.hash
         }
         // TODO HeadIconUpdate
 
@@ -228,7 +229,7 @@ object PlayerInfoEncoder {
         }
 
         if (maskData >= 0xff) maskData = maskData or 0x40
-        if (maskData >= 0xffff) maskData = maskData or 0x1000
+        if (maskData >= 0xffff) maskData = maskData or 0x400
 
         block.put(DataType.SHORT, 0) // TODO Size of the update block
         block.put(DataType.BYTE, maskData)
@@ -264,7 +265,7 @@ object PlayerInfoEncoder {
     }
 
     private fun needsMaskUpdate(player: WorldPlayer, viewport: Viewport, target: PlayerEntity, blockSize: Int): Boolean {
-        val appearanceUpdate = needsAppearanceUpdate(viewport, target.index, ByteArray(0) /*target.model.hash*/, blockSize)
+        val appearanceUpdate = needsAppearanceUpdate(viewport, target.index, target.model.hash, blockSize)
         // TODO Icon update
         return appearanceUpdate || target.renderer.needsUpdate(player)
     }
@@ -272,8 +273,7 @@ object PlayerInfoEncoder {
     private fun needsAppearanceUpdate(viewport: Viewport, index: Int, hash: ByteArray, blockSize: Int): Boolean {
         if (blockSize > ((7500 - 500) / 2) || hash.isEmpty()) return false
         val cachedHash = viewport.cachedAppearanceHashes[index]
-        return false // TODO Check if player needs appearance update
-//        return cachedHash == null || !MessageDigest.isEqual(cachedHash, hash)
+        return cachedHash == null || !MessageDigest.isEqual(cachedHash, hash)
     }
 
     private fun putSkip(buffer: GamePacketBuilder, skipCount: Int) {
@@ -302,7 +302,6 @@ object PlayerInfoEncoder {
                                       nsn2: Boolean) {
         buffer.switchToBitAccess()
         var skipCount = 0
-//        if (player.username == "techdaan") println("outPlayerIndicesCount = ${viewport.outPlayerIndicesCount}, inPlayerIndicesCount = ${viewport.localPlayerIndicesCount}")
         for (index in 0 until viewport.outPlayerIndicesCount) {
             val id = viewport.outPlayerIndices[index]
             if (if (nsn2) (viewport.slotFlags[id].toInt() and 0x1) == 0

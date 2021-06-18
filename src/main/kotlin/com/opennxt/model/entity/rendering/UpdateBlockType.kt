@@ -6,5 +6,5 @@ enum class UpdateBlockType(
     val npcMask: Int = 0,
     val npcPos: Int = -1
 ) {
-    APPEARANCE(0x4, 3)
+    APPEARANCE(0x1, 3)
 }

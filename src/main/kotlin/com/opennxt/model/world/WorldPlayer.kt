@@ -28,6 +28,10 @@ import mu.KotlinLogging
 import kotlin.reflect.KClass
 
 class WorldPlayer(client: ConnectedClient, name: String, val entity: PlayerEntity) : BasePlayer(client, name) {
+    init {
+        entity.controllingPlayer = this
+    }
+
     private val handlers =
         Object2ObjectOpenHashMap<KClass<out GamePacket>, GamePacketHandler<in BasePlayer, out GamePacket>>()
     private val logger = KotlinLogging.logger { }
@@ -50,6 +54,8 @@ class WorldPlayer(client: ConnectedClient, name: String, val entity: PlayerEntit
     }
 
     fun added() {
+        entity.model.refresh()
+
         client.channel.write(Unpooled.buffer(1).writeByte(GenericResponse.SUCCESSFUL.id))
         client.channel.writeAndFlush(
             LoginPacket.GameLoginResponse(
