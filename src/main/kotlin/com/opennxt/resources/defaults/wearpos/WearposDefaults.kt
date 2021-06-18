@@ -1,5 +1,7 @@
-package com.opennxt.resources.defaults
+package com.opennxt.resources.defaults.wearpos
 
+import com.opennxt.resources.defaults.Default
+import com.opennxt.resources.defaults.DefaultGroup
 import io.netty.buffer.ByteBuf
 import mu.KotlinLogging
 

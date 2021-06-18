@@ -1,5 +1,7 @@
 package com.opennxt.model.lobby
 
+import com.opennxt.api.stat.StatContainer
+import com.opennxt.impl.stat.PlayerStatContainer
 import com.opennxt.model.InterfaceHash
 import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.entity.player.InterfaceManager
@@ -31,6 +33,7 @@ class LobbyPlayer(client: ConnectedClient, name: String) : BasePlayer(client, na
     private val logger = KotlinLogging.logger { }
 
     override val interfaces: InterfaceManager = InterfaceManager(this)
+    override val stats: StatContainer = PlayerStatContainer(this)
 
     val worldList = WorldList(
         arrayOf(
@@ -98,6 +101,7 @@ class LobbyPlayer(client: ConnectedClient, name: String) : BasePlayer(client, na
     }
 
     fun added() {
+        stats.init()
         client.write(ResetClientVarcache)
         TODORefactorThisClass.sendDefaultVarps(client)
 

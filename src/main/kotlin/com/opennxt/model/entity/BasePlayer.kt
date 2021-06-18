@@ -1,5 +1,6 @@
 package com.opennxt.model.entity
 
+import com.opennxt.api.stat.StatContainer
 import com.opennxt.model.commands.CommandSender
 import com.opennxt.model.entity.player.InterfaceManager
 import com.opennxt.model.messages.Message
@@ -10,6 +11,7 @@ import mu.KotlinLogging
 
 abstract class BasePlayer(var client: ConnectedClient, val name: String): CommandSender, Tickable {
     abstract val interfaces: InterfaceManager
+    abstract val stats: StatContainer
 
     var noTimeouts = 0
     private val logger = KotlinLogging.logger { }

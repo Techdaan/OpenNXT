@@ -1,5 +1,7 @@
 package com.opennxt.resources.defaults
 
+import com.opennxt.resources.defaults.stats.StatDefaults
+import com.opennxt.resources.defaults.wearpos.WearposDefaults
 import io.netty.buffer.ByteBuf
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlin.reflect.KClass
@@ -14,7 +16,7 @@ enum class DefaultGroup(val fileId: Int, val defaultClass: KClass<out Default>?)
     WEARPOS(6, WearposDefaults::class),
     KEYBOARD(7, null),
     GROUP_8(8, null),
-    STAT(9, null),
+    STAT(9, StatDefaults::class),
     ERROR(10, null);
 
     @Suppress("UNCHECKED_CAST")

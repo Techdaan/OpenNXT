@@ -4,7 +4,7 @@ import com.opennxt.model.entity.PlayerEntity
 import com.opennxt.net.buf.DataType
 import com.opennxt.net.buf.GamePacketBuilder
 import com.opennxt.resources.FilesystemResources
-import com.opennxt.resources.defaults.WearposDefaults
+import com.opennxt.resources.defaults.wearpos.WearposDefaults
 import com.opennxt.util.MD5
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled

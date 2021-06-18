@@ -1,5 +1,7 @@
 package com.opennxt.net.proxy
 
+import com.opennxt.api.stat.StatContainer
+import com.opennxt.impl.stat.PlayerStatContainer
 import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.entity.player.InterfaceManager
 import com.opennxt.net.Side
@@ -31,6 +33,7 @@ class ProxyPlayer(val proxyClient: ConnectedProxyClient, name: String) : BasePla
     private val logger = KotlinLogging.logger { }
 
     override val interfaces: InterfaceManager = InterfaceManager(this)
+    override val stats: StatContainer = PlayerStatContainer(this)
 
     val plaintextDumpFile: BufferedWriter
 

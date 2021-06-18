@@ -1,6 +1,8 @@
 package com.opennxt.model.world
 
 import com.opennxt.OpenNXT
+import com.opennxt.api.stat.StatContainer
+import com.opennxt.impl.stat.PlayerStatContainer
 import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.entity.PlayerEntity
 import com.opennxt.model.entity.movement.CompassPoint
@@ -38,6 +40,7 @@ class WorldPlayer(client: ConnectedClient, name: String, val entity: PlayerEntit
 
     val viewport = Viewport(this)
     override val interfaces: InterfaceManager = InterfaceManager(this)
+    override val stats: StatContainer = PlayerStatContainer(this)
 
     fun handleIncomingPackets() {
         val queue = client.incomingQueue
@@ -89,9 +92,8 @@ class WorldPlayer(client: ConnectedClient, name: String, val entity: PlayerEntit
         client.write(UnidentifiedPacket(OpcodeWithBuffer(registration.opcode, packet)))
         // Oh well.
 
-        println("Are we alive?")
-
         val player = this
+        stats.init()
         player.client.write(ResetClientVarcache)
         TODORefactorThisClass.sendDefaultVarps(client)
         player.client.write(RunClientScript(script = 671, args = arrayOf(0)))
