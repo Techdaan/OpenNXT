@@ -1,9 +1,12 @@
 package com.opennxt.model.world
 
+import com.opennxt.OpenNXT
 import com.opennxt.model.entity.BasePlayer
 import com.opennxt.model.entity.PlayerEntity
+import com.opennxt.model.entity.movement.CompassPoint
 import com.opennxt.model.entity.player.InterfaceManager
 import com.opennxt.model.entity.player.Viewport
+import com.opennxt.model.entity.updating.PlayerInfoEncoder
 import com.opennxt.model.lobby.TODORefactorThisClass
 import com.opennxt.net.ConnectedClient
 import com.opennxt.net.GenericResponse
@@ -1036,6 +1039,11 @@ class WorldPlayer(client: ConnectedClient, name: String, val entity: PlayerEntit
     }
 
     override fun tick() {
+        val opcode = OpenNXT.protocol.serverProtNames.values["PLAYER_INFO"]!!
+
+        client.write(UnidentifiedPacket(OpcodeWithBuffer(opcode, PlayerInfoEncoder.createBufferFor(this))))
+        viewport.resetForNextTransmit()
+
         client.write(ServerTickEnd)
     }
 }

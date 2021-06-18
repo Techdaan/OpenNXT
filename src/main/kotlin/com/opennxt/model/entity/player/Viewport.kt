@@ -1,6 +1,8 @@
 package com.opennxt.model.entity.player
 
+import com.opennxt.OpenNXT
 import com.opennxt.model.entity.PlayerEntity
+import com.opennxt.model.entity.movement.MovementSpeed
 import com.opennxt.model.world.MapSize
 import com.opennxt.model.world.TileLocation
 import com.opennxt.model.world.WorldPlayer
@@ -44,18 +46,43 @@ class Viewport(val player: WorldPlayer) {
         for (index in 1 until 2048) {
             if (index == entity.index)
                 continue
-            // TODO Add other players' hashes below
-            // TODO Add player movement speed to hash (2 bits)
-//            val other = OpenNXT.world.getPlayer(index)
-//            val other = null
-//            val hash = other?.location?.regionHash ?: 0
-            buf.putBits(20, 0)
-            regionHashes[index] = 0
+            val other = OpenNXT.world.getPlayer(index)
+            val speed = other?.movement?.currentSpeed ?: MovementSpeed.STATIONARY
+            val hash = (other?.location?.regionHash ?: 0) or (speed.id shl 18)
+            buf.putBits(20, hash)
+            regionHashes[index] = hash
             outPlayerIndices[outPlayerIndicesCount++] = index
+            if (speed != MovementSpeed.STATIONARY)
+                continue
+            slotFlags[index] = (slotFlags[index].toInt() or 0x1).toByte()
         }
         buf.switchToByteAccess()
         moveToRegion(entity.location, mapSize, false)
     }
+    /*
+    public void init(GamePacketBuilder buffer) {
+        buffer.switchToBitAccess();
+        buffer.putBits(30, player.getTileHash());
+        localPlayers[player.getIndex()] = player;
+        localPlayersIndexes[localPlayersIndexesCount++] = player.getIndex();
+        for (int playerIndex = 1; playerIndex < 2048; playerIndex++) {
+            if (playerIndex == player.getIndex())
+                continue;
+            Player player = World.getPlayers().get(playerIndex);
+            MovementSpeed speed = MovementSpeed.STATIONARY;
+            int hash = 0;
+            if (player != null) {
+                speed = player.getMovementSpeed();
+                hash = player.getRegionHash() | (speed.getId() << 18);
+            }
+            buffer.putBits(20, regionHashes[playerIndex] = hash);
+            outPlayersIndexes[outPlayersIndexesCount++] = playerIndex;
+            if (speed != MovementSpeed.STATIONARY) continue;
+            slotFlags[playerIndex] = (byte)(slotFlags[playerIndex] | 1);
+        }
+        buffer.switchToByteAccess();
+    }
+     */
 
     fun moveToRegion(tile: TileLocation, size: MapSize, sendUpdate: Boolean = true) {
         this.mapSize = size
@@ -97,5 +124,19 @@ class Viewport(val player: WorldPlayer) {
             hash1 = Int.MIN_VALUE,
             hash2 = Int.MAX_VALUE,
         )
+    }
+
+    fun resetForNextTransmit() {
+        localPlayerIndicesCount = 0
+        outPlayerIndicesCount = 0
+        localAddedPlayers = 0
+        for (idx in 1 until 2048) {
+            slotFlags[idx] = (slotFlags[idx].toInt() shr 1).toByte()
+            val player = localPlayers[idx]
+            if (player == null)
+                outPlayerIndices[outPlayerIndicesCount++] = idx
+            else
+                localPlayerIndices[localPlayerIndicesCount++] = idx
+        }
     }
 }
