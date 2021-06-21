@@ -28,6 +28,8 @@ class World : Tickable {
         players.forEach { it.client.flush() }
     }
 
+    fun getPlayer(index: Int): PlayerEntity? = playerEntities[index]
+
     fun addPlayer(player: WorldPlayer) {
         toAdd += player
     }

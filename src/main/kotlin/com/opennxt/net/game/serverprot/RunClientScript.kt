@@ -6,7 +6,7 @@ import com.opennxt.net.buf.GamePacketReader
 import com.opennxt.net.game.GamePacket
 import com.opennxt.net.game.pipeline.GamePacketCodec
 
-data class RunClientScript(val script: Int, val args: Array<Any>) : GamePacket {
+data class RunClientScript(val script: Int, val args: Array<Any> = emptyArray()) : GamePacket {
     object Codec : GamePacketCodec<RunClientScript> {
         override fun encode(packet: RunClientScript, buf: GamePacketBuilder) {
             val desc = String(packet.args.map { if (it is String) 's' else 'i' }.toCharArray())

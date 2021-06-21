@@ -1,0 +1,7 @@
+target int
+unk1 ubyte128
+unk2 ubytec
+unk3 ubyte
+unk4 ubyte
+unk5 ubyte
+unk6 ubytec

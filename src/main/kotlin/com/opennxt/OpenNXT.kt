@@ -3,6 +3,7 @@ package com.opennxt
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.opennxt.api.stat.Stat
 import com.opennxt.config.RsaConfig
 import com.opennxt.config.ServerConfig
 import com.opennxt.config.TomlConfig
@@ -74,6 +75,10 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
             exitProcess(1)
         }
         proxyConfig = TomlConfig.load(Constants.CONFIG_PATH.resolve("proxy.toml"))
+    }
+
+    fun reloadContent() {
+        Stat.reload()
     }
 
     override fun run() {
@@ -154,6 +159,9 @@ object OpenNXT : CliktCommand(name = "run-server", help = "Launches the OpenNXT 
             logger.info { "Registering proxy connection handler to tick engine" }
             tickEngine.submitTickable(proxyConnectionHandler)
         }
+
+        logger.info { "Reloading content-related things" }
+        reloadContent()
 
         logger.info { "Starting network" }
         bootstrap.group(NioEventLoopGroup())
