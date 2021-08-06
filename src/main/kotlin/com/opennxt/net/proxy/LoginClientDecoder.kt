@@ -91,6 +91,7 @@ class LoginClientDecoder : ByteToMessageDecoder() {
                         medium9 = payload.readMedium(),
                         isMember = payload.readUnsignedByte().toInt(),
                         username = payload.readNullCircumfixedString(),
+                        username = payload.readNullCircumfixedString(true),
                         short12 = payload.readUnsignedShort(),
                         int13 = payload.readInt()
                     )
